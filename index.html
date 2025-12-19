@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EventBuddy</title>
+    <link rel="stylesheet" href="./css/main.css"> <!-- wird aus SCSS generiert -->
+</head>
+
+<body>
+
+<header class="header">
+    <h1 class="header__title">EventBuddy</h1>
+    <button id="btn-new-event" class="header__button">Neues Event</button>
+</header>
+
+<main class="layout">
+
+    <!-- LINKER BEREICH: EVENT-LISTE (WebComponent) -->
+    <section class="layout__sidebar">
+        <h2>Events</h2>
+        <event-list></event-list> <!-- WebComponent -->
+    </section>
+
+    <!-- MITTLERER BEREICH: DETAILANSICHT (WebComponent) -->
+    <section class="layout__detail">
+        <h2>Details</h2>
+        <event-detail></event-detail> <!-- WebComponent -->
+    </section>
+
+    <!-- RECHTER BEREICH: FORMULAR (via DOM JS gefüllt) -->
+    <section class="layout__form" id="form-container">
+        <!-- JS setzt hier das Formular rein -->
+    </section>
+
+</main>
+
+<script type="module" src="./js/controller.js"></script>
+</body>
+</html>
