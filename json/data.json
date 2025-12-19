@@ -1,0 +1,80 @@
+{
+  "participants": [
+    {
+      "id": "p1",
+      "name": "Laura Steiner",
+      "email": "laura.steiner@example.com",
+      "avatar": "L"
+    },
+    {
+      "id": "p2",
+      "name": "Jonas Weber",
+      "email": "jonas.weber@example.com",
+      "avatar": "J"
+    },
+    {
+      "id": "p3",
+      "name": "Mia Huber",
+      "email": "mia.huber@example.com",
+      "avatar": "M"
+    },
+    {
+      "id": "p4",
+      "name": "Tom Berger",
+      "email": "tom.berger@example.com",
+      "avatar": "T"
+    }
+  ],
+
+  "tags": [
+    { "id": "t1", "title": "Outdoor" },
+    { "id": "t2", "title": "Sport" },
+    { "id": "t3", "title": "Essen & Trinken" }
+  ],
+
+  "events": [
+    {
+      "id": "e1",
+      "title": "Wanderung am Pöstlingberg",
+      "description": "Gemeinsame Wanderung mit schöner Aussicht und gemütlichem Abschluss im Café.",
+      "datetime": "2025-05-15T09:30",
+      "location": "Treffpunkt: Parkplatz Pöstlingberg",
+      "status": "planned",
+      "tags": ["t1"],
+      "participants": [
+        { "participantId": "p1", "status": "accepted" },
+        { "participantId": "p2", "status": "undecided" },
+        { "participantId": "p4", "status": "accepted" }
+      ]
+    },
+
+    {
+      "id": "e2",
+      "title": "Beachvolleyball-Runde",
+      "description": "Freundschaftliches Match am Sandplatz. Anfänger und Profis willkommen!",
+      "datetime": "2025-06-03T17:00",
+      "location": "Sportpark Linz",
+      "status": "planned",
+      "tags": ["t2", "t1"],
+      "participants": [
+        { "participantId": "p2", "status": "accepted" },
+        { "participantId": "p3", "status": "accepted" },
+        { "participantId": "p4", "status": "declined" }
+      ]
+    },
+
+    {
+      "id": "e3",
+      "title": "Brunch im Sonnencafé",
+      "description": "Gemeinsam gemütlich essen und den Sonntag starten.",
+      "datetime": "2025-04-20T10:00",
+      "location": "Sonnencafé Innenstadt",
+      "status": "done",
+      "tags": ["t3"],
+      "participants": [
+        { "participantId": "p1", "status": "accepted" },
+        { "participantId": "p3", "status": "accepted" }
+      ]
+    }
+  ]
+}

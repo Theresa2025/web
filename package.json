@@ -1,10 +1,15 @@
 {
-  "name": "EventBuddy",
+  "name": "eventbuddy",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "type": "commonjs",
+
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:css": "sass styles/main.scss styles/main.css",
+    "watch:css": "sass --watch styles/main.scss:styles/main.css"
   },
-  "private": true
+
+  "devDependencies": {
+    "sass": "^1.97.0"
+  }
 }

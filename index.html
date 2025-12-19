@@ -2,39 +2,64 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EventBuddy</title>
-    <link rel="stylesheet" href="./css/main.css"> <!-- wird aus SCSS generiert -->
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="./styles/main.css">
+
 </head>
 
 <body>
 
-<header class="header">
-    <h1 class="header__title">EventBuddy</h1>
-    <button id="btn-new-event" class="header__button">Neues Event</button>
+<!-- =========================================================
+     HEADER: Navigation zwischen Use Cases
+========================================================== -->
+<header class="app-header">
+    <h1 class="app-header__logo">EventBuddy</h1>
+
+    <nav class="app-header__nav">
+        <button class="nav-btn" data-view="events">Events</button>
+        <button class="nav-btn" data-view="participants">Teilnehmer</button>
+        <button class="nav-btn" data-view="tags">Tags</button>
+    </nav>
 </header>
 
-<main class="layout">
 
-    <!-- LINKER BEREICH: EVENT-LISTE (WebComponent) -->
-    <section class="layout__sidebar">
-        <h2>Events</h2>
-        <event-list></event-list> <!-- WebComponent -->
-    </section>
+<!-- =========================================================
+     MAIN CONTAINER (Single Page Application)
+     -> wird vom Controller gesteuert
+========================================================== -->
+<main id="app-root">
 
-    <!-- MITTLERER BEREICH: DETAILANSICHT (WebComponent) -->
-    <section class="layout__detail">
-        <h2>Details</h2>
-        <event-detail></event-detail> <!-- WebComponent -->
-    </section>
+    <!-- Beispiel: Startansicht mit Eventliste -->
+    <!-- JS lädt WebComponents automatisch hier hinein -->
 
-    <!-- RECHTER BEREICH: FORMULAR (via DOM JS gefüllt) -->
-    <section class="layout__form" id="form-container">
-        <!-- JS setzt hier das Formular rein -->
-    </section>
+    <event-list></event-list>
+    <event-detail></event-detail>
+    <!-- <participant-list></participant-list> -->
+    <!-- <tag-manager></tag-manager> -->
 
 </main>
 
-<script type="module" src="./js/controller.js"></script>
+
+<!-- =========================================================
+     MODAL AREA
+     -> für Use Cases: "Event anlegen", "Event bearbeiten",
+        "Teilnehmer hinzufügen", "Tag anlegen"
+========================================================== -->
+<div id="modal-container"></div>
+
+<script type="module" src="./js/model/model.js"></script>
+<script type="module" src="./js/views/event-view.js"></script>
+<script type="module" src="./js/views/event-detail.js"></script>
+
+<script type="module" src="./js/main.js"></script>
+
+
+
+
 </body>
 </html>
