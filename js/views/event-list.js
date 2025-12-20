@@ -1,53 +1,39 @@
-class EventList extends HTMLElement {
-    constructor() {
-        super();
-        this.attachShadow({ mode: "open" });
-    }
+import { model } from "../model/model.js";
 
+class EventList extends HTMLElement {
     connectedCallback() {
         this.render();
 
-        // 👂 Observer – exakt wie addContact in Übung 5
-        model.addEventListener("addEvent", (e) => {
-            this.addEvent(e.detail);
-        });
+        model.addEventListener("addEvent", () => this.render());
+        model.addEventListener("deleteEvent", () => this.render());
+        model.addEventListener("updateEvent", () => this.render());
+        model.addEventListener("filter-changed", () => this.render());
 
-        model.addEventListener("deleteEvent", (e) => {
-            this.removeEvent(e.detail.id);
-        });
+        // ✅ DAS WAR DER FEHLENDE TEIL
+        model.addEventListener("model-ready", () => this.render());
     }
+
 
     render() {
-        this.shadowRoot.innerHTML = `
-      <style>
-        ul {
-          list-style: none;
-          padding: 0;
-          margin: 0;
+        this.innerHTML = "<ul></ul>";
+        const ul = this.querySelector("ul");
+
+        for (const ev of model.filteredEvents) {
+            const li = document.createElement("li");
+            li.textContent = ev.title;
+
+            li.addEventListener("click", () => {
+                this.dispatchEvent(new CustomEvent("select-event", {
+                    bubbles: true,
+                    detail: { id: ev.id }
+                }));
+            });
+
+            ul.appendChild(li);
         }
-      </style>
-      <ul class="eventlist"></ul>
-    `;
-
-        for (const [, ev] of model.events) {
-            this.addEvent(ev);
-        }
-    }
-
-    addEvent(ev) {
-        const list = this.shadowRoot.querySelector("ul");
-        const item = document.createElement("event-item");
-        item.event = ev;
-        list.appendChild(item);
-    }
-
-    removeEvent(eventId) {
-        this.shadowRoot.querySelectorAll("event-item").forEach(item => {
-            if (item.event.id === eventId) {
-                item.remove();
-            }
-        });
     }
 }
 
-customElements.define("event-list", EventList);
+if (!customElements.get("event-list")) {
+    customElements.define("event-list", EventList);
+}
