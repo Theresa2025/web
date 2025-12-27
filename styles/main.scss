@@ -1,7 +1,22 @@
-body{
-  background-color:red;
+@use 'colors';
+@use 'mixins';
+@use 'layout';
+@use 'sidebar';
+@use 'event-list';
+@use 'content';
+@use 'header';
+
+* {
+  box-sizing: border-box;
 }
 
-header{
-  background-color:green;
+html, body {
+  height: 100%;
+}
+
+.app {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--font-color);
+  font-family: 'Inter', system-ui, sans-serif;
 }

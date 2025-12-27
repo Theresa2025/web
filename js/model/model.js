@@ -3,8 +3,10 @@ class EventBuddyModel extends EventTarget {
     #participants = new Map();
     #tags = new Map();
 
-    #currentEvent;
+    #currentEvent = undefined;   // undefined | null | Event
     #statusFilter = "all";
+    #tagFilter = "all";
+    #participantFilter = "all"; // 🆕 NEU
 
     constructor() {
         super();
@@ -36,9 +38,15 @@ class EventBuddyModel extends EventTarget {
                 this.#events.set(e.id, e);
             }
 
+            console.log("[Model] JSON geladen:", {
+                events: this.#events,
+                tags: this.#tags,
+                participants: this.#participants
+            });
+
             this.dispatchEvent(new CustomEvent("model-ready"));
         } catch (err) {
-            console.error("JSON load failed", err);
+            console.error("[Model] JSON load failed", err);
         }
     }
 
@@ -53,12 +61,28 @@ class EventBuddyModel extends EventTarget {
     ====================== */
 
     get filteredEvents() {
-        if (this.#statusFilter === "all") {
-            return [...this.#events.values()];
+        let events = [...this.#events.values()];
+
+        // Status-Filter
+        if (this.#statusFilter !== "all") {
+            events = events.filter(e => e.status === this.#statusFilter);
         }
-        return [...this.#events.values()].filter(
-            e => e.status === this.#statusFilter
-        );
+
+        // Tag-Filter
+        if (this.#tagFilter !== "all") {
+            events = events.filter(e => e.tags?.includes(this.#tagFilter));
+        }
+
+        // 🆕 Teilnehmer-Filter
+        if (this.#participantFilter !== "all") {
+            events = events.filter(e =>
+                (e.participants ?? []).some(
+                    p => p.participantId === this.#participantFilter
+                )
+            );
+        }
+
+        return events;
     }
 
     get currentEvent() {
@@ -70,11 +94,58 @@ class EventBuddyModel extends EventTarget {
     }
 
     /* =====================
-       EVENT ACTIONS
+       TAGS
     ====================== */
 
+    get tags() {
+        return [...this.#tags.values()];
+    }
+
+    getTagTitle(tagId) {
+        return this.#tags.get(tagId)?.title ?? tagId;
+    }
+
+    /* =====================
+       PARTICIPANTS
+    ====================== */
+
+    get participants() {
+        return [...this.#participants.values()];
+    }
+
+    getParticipantById(id) {
+        return this.#participants.get(id);
+    }
+
+    /* =====================
+       EVENT CRUD
+    ====================== */
+
+    addEvent(event) {
+        if (!event.id) {
+            event.id = "e" + crypto.randomUUID();
+        }
+
+        this.#events.set(event.id, event);
+
+        console.log("[Model] addEvent:", event);
+
+        this.dispatchEvent(new CustomEvent("addEvent", {
+            detail: { event }
+        }));
+
+        this.selectEvent(event.id);
+    }
+
     selectEvent(id) {
-        this.#currentEvent = this.#events.get(id);
+        if (id === null) {
+            this.#currentEvent = null;
+            console.log("[Model] selectEvent: CREATE MODE");
+        } else {
+            this.#currentEvent = this.#events.get(id);
+            console.log("[Model] selectEvent:", this.#currentEvent);
+        }
+
         this.dispatchEvent(new CustomEvent("event-changed", {
             detail: { event: this.#currentEvent }
         }));
@@ -86,6 +157,8 @@ class EventBuddyModel extends EventTarget {
 
         Object.assign(ev, patch);
 
+        console.log("[Model] updateEvent:", ev);
+
         this.dispatchEvent(new CustomEvent("updateEvent"));
         this.dispatchEvent(new CustomEvent("event-changed", {
             detail: { event: ev }
@@ -96,16 +169,67 @@ class EventBuddyModel extends EventTarget {
         this.#events.delete(id);
         this.#currentEvent = undefined;
 
+        console.log("[Model] deleteEvent:", id);
+
         this.dispatchEvent(new CustomEvent("deleteEvent"));
         this.dispatchEvent(new CustomEvent("event-changed", {
             detail: { event: null }
         }));
     }
 
+    /* =====================
+       FILTER
+    ====================== */
+
+
     setStatusFilter(status) {
         this.#statusFilter = status;
+        console.log("[Model] statusFilter gesetzt:", status);
         this.dispatchEvent(new CustomEvent("filter-changed"));
     }
+
+    setTagFilter(tagId) {
+        this.#tagFilter = tagId;
+        console.log("[Model] tagFilter gesetzt:", tagId);
+        this.dispatchEvent(new CustomEvent("filter-changed"));
+    }
+
+    // 🆕 Teilnehmer-Filter setzen
+    setParticipantFilter(participantId) {
+        this.#participantFilter = participantId;
+        console.log("[Model] participantFilter gesetzt:", participantId);
+        this.dispatchEvent(new CustomEvent("filter-changed"));
+    }
+    addTag(tag) {
+        if (!tag.id) tag.id = "t" + crypto.randomUUID();
+        this.#tags.set(tag.id, tag);
+        console.log("[Model] addTag:", tag);
+        this.dispatchEvent(new CustomEvent("tags-changed"));
+    }
+
+    updateTag(id, patch) {
+        const t = this.#tags.get(id);
+        if (!t) return;
+        Object.assign(t, patch);
+        console.log("[Model] updateTag:", t);
+        this.dispatchEvent(new CustomEvent("tags-changed"));
+    }
+
+    deleteTag(id) {
+        // Regel: Tag darf nur gelöscht werden, wenn unbenutzt
+        const used = [...this.#events.values()].some(ev => (ev.tags ?? []).includes(id));
+        if (used) {
+            this.dispatchEvent(new CustomEvent("error", {
+                detail: { message: "Tag kann nicht gelöscht werden (wird in einem Event verwendet)." }
+            }));
+            return false;
+        }
+        this.#tags.delete(id);
+        console.log("[Model] deleteTag:", id);
+        this.dispatchEvent(new CustomEvent("tags-changed"));
+        return true;
+    }
+
 }
 
 export const model = new EventBuddyModel();

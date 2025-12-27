@@ -1,0 +1,12 @@
+.layout {
+  height: calc(100vh - 64px); // Header abziehen
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+}
+
+@media (min-width: 768px) {
+  .layout {
+    grid-template-columns: 320px 1fr;
+  }
+}

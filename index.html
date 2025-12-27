@@ -9,13 +9,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="./styles/main.css">
-
 </head>
 
-<body>
+<body class="app">
 
 <!-- =========================================================
-     HEADER: Navigation zwischen Use Cases
+     HEADER
 ========================================================== -->
 <header class="app-header">
     <h1 class="app-header__logo">EventBuddy</h1>
@@ -27,38 +26,34 @@
     </nav>
 </header>
 
-
 <!-- =========================================================
-     MAIN CONTAINER (Single Page Application)
-     -> wird vom Controller gesteuert
+     MAIN LAYOUT
 ========================================================== -->
-<main id="app-root">
+<main class="layout">
 
-    <!-- Beispiel: Startansicht mit Eventliste -->
-    <!-- JS lädt WebComponents automatisch hier hinein -->
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <button id="btn-new-event">+ Neues Event</button>
+        <event-create></event-create>
 
-    <event-filter></event-filter>
-    <event-list></event-list>
-    <event-detail></event-detail>
-    <!-- <participant-list></participant-list> -->
-    <!-- <tag-manager></tag-manager> -->
+        <event-filter></event-filter>
+        <tag-filter></tag-filter>
+        <event-list></event-list>
+    </aside>
+
+    <!-- CONTENT -->
+    <section class="content">
+        <event-detail></event-detail>
+        <!-- später: participant-list / tag-view -->
+    </section>
 
 </main>
 
-
 <!-- =========================================================
-     MODAL AREA
-     -> für Use Cases: "Event anlegen", "Event bearbeiten",
-        "Teilnehmer hinzufügen", "Tag anlegen"
+     MODAL CONTAINER
 ========================================================== -->
 <div id="modal-container"></div>
 
-
-
 <script type="module" src="./js/main.js"></script>
-
-
-
-
 </body>
 </html>
