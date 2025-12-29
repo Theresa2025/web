@@ -152,6 +152,19 @@ class EventDetail extends HTMLElement {
                     </select>
                 </label>
 
+                <h3>Tags</h3>
+                ${model.tags.map(tag => `
+                    <label>
+                        <input
+                            type="checkbox"
+                            name="tag"
+                            value="${tag.id}"
+                            ${this.#event.tagIds.includes(tag.id) ? "checked" : ""}
+                        >
+                        ${tag.title}
+                    </label>
+                `).join("")}
+
                 <h3>Teilnehmer</h3>
                 ${this.#event.participants.map(p => {
                 const person = model.getParticipantById(p.participantId);
@@ -179,11 +192,16 @@ class EventDetail extends HTMLElement {
                     status: sel.value
                 }));
 
+                const updatedTags = [
+                    ...this.shadowRoot.querySelectorAll('input[name="tag"]:checked')
+                ].map(cb => cb.value);
+
                 model.updateEvent(this.#event.id, {
                     title: this.shadowRoot.querySelector("#title").value,
                     location: this.shadowRoot.querySelector("#location").value,
                     description: this.shadowRoot.querySelector("#description").value,
                     status: this.shadowRoot.querySelector("#status").value,
+                    tags: updatedTags,
                     participants: updatedParticipants
                 });
             });
@@ -206,8 +224,8 @@ class EventDetail extends HTMLElement {
             <p>${this.#event.description}</p>
 
             <p><strong>Tags:</strong>
-                ${this.#event.tags?.length
-            ? this.#event.tags.map(t => model.getTagTitle(t)).join(", ")
+                ${this.#event.tagIds.length
+            ? this.#event.tagIds.map(id => model.getTagTitle(id)).join(", ")
             : "keine"}
             </p>
 

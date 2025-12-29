@@ -1,7 +1,0 @@
-@use 'mixins' as *;
-
-.content {
-  @include card;
-  padding: 20px;
-  overflow: auto;
-}

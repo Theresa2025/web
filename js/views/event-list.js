@@ -1,39 +1,92 @@
 import { model } from "../model/model.js";
 
 class EventList extends HTMLElement {
+    constructor() {
+        super();
+        this.attachShadow({ mode: "open" });
+    }
+
     connectedCallback() {
         this.render();
 
-        model.addEventListener("addEvent", () => this.render());
-        model.addEventListener("deleteEvent", () => this.render());
-        model.addEventListener("updateEvent", () => this.render());
-        model.addEventListener("filter-changed", () => this.render());
-
-        // ✅ DAS WAR DER FEHLENDE TEIL
         model.addEventListener("model-ready", () => this.render());
+        model.addEventListener("filter-changed", () => this.render());
+        model.addEventListener("events-changed", () => this.render());
+        model.addEventListener("event-changed", () => this.render());
     }
-
 
     render() {
-        this.innerHTML = "<ul></ul>";
-        const ul = this.querySelector("ul");
+        const currentId = model.currentEvent?.id;
 
-        for (const ev of model.filteredEvents) {
-            const li = document.createElement("li");
-            li.textContent = ev.title;
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host {
+                    display: block;
+                }
 
+                ul {
+                    list-style: none;
+                    margin: 0;
+                    padding: 0;
+                }
+
+                li {
+                    padding: 12px 14px;
+                    border-radius: 12px;
+                    cursor: pointer;
+                    transition: background-color 0.15s ease, transform 0.1s ease;
+                }
+
+                li:hover {
+                    background-color: rgba(0, 0, 0, 0.04);
+                    transform: translateY(-1px);
+                }
+
+                li.active {
+                    background-color: rgba(16, 185, 129, 0.18);
+                    border-left: 4px solid var(--primary);
+                    font-weight: 600;
+                }
+
+                .title {
+                    font-weight: 600;
+                }
+
+                .meta {
+                    font-size: 0.85em;
+                    color: #555;
+                }
+            </style>
+
+            <ul>
+                ${model.filteredEvents.map(ev => `
+                    <li
+                        data-id="${ev.id}"
+                        class="${ev.id === currentId ? "active" : ""}"
+                    >
+                        <div class="title">${ev.title}</div>
+                        <div class="meta">
+                            ${new Date(ev.datetime).toLocaleString()}
+                        </div>
+                    </li>
+                `).join("")}
+            </ul>
+        `;
+
+        this.shadowRoot.querySelectorAll("li").forEach(li => {
             li.addEventListener("click", () => {
-                this.dispatchEvent(new CustomEvent("select-event", {
-                    bubbles: true,
-                    detail: { id: ev.id }
-                }));
-            });
+                const id = li.dataset.id;
 
-            ul.appendChild(li);
-        }
+                this.dispatchEvent(
+                    new CustomEvent("select-event", {
+                        bubbles: true,
+                        composed: true,
+                        detail: { id }
+                    })
+                );
+            });
+        });
     }
 }
 
-if (!customElements.get("event-list")) {
-    customElements.define("event-list", EventList);
-}
+customElements.define("event-list", EventList);

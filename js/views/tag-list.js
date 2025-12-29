@@ -1,17 +1,17 @@
 import { model } from "../model/model.js";
 
-class ParticipantList extends HTMLElement {
+class TagList extends HTMLElement {
 
     connectedCallback() {
         this.render();
 
         model.addEventListener("model-ready", () => this.render());
-        model.addEventListener("participants-changed", () => this.render());
-        model.addEventListener("participant-changed", () => this.render());
+        model.addEventListener("tags-changed", () => this.render());
+        model.addEventListener("tag-changed", () => this.render());
     }
 
     render() {
-        const currentId = model.currentParticipant?.id;
+        const currentId = model.currentTag?.id;
 
         this.innerHTML = `
             <style>
@@ -41,29 +41,29 @@ class ParticipantList extends HTMLElement {
                 }
             </style>
 
-            <button id="btn-new-participant">
-                + Neuer Teilnehmer
+            <button id="btn-new-tag">
+                + Neuer Tag
             </button>
 
             <ul>
-                ${model.participants.map(p => `
+                ${model.tags.map(t => `
                     <li
-                        data-id="${p.id}"
-                        class="${p.id === currentId ? "active" : ""}"
+                        data-id="${t.id}"
+                        class="${t.id === currentId ? "active" : ""}"
                     >
-                        ${p.name}
+                        ${t.title}
                     </li>
                 `).join("")}
             </ul>
         `;
 
-        this.querySelector("#btn-new-participant").onclick = () => {
-            model.selectParticipant(null);
+        this.querySelector("#btn-new-tag").onclick = () => {
+            model.selectTag(null);
         };
 
         this.querySelectorAll("li[data-id]").forEach(li => {
             li.onclick = () => {
-                this.dispatchEvent(new CustomEvent("select-participant", {
+                this.dispatchEvent(new CustomEvent("select-tag", {
                     bubbles: true,
                     composed: true,
                     detail: { id: li.dataset.id }
@@ -73,4 +73,4 @@ class ParticipantList extends HTMLElement {
     }
 }
 
-customElements.define("participant-list", ParticipantList);
+customElements.define("tag-list", TagList);

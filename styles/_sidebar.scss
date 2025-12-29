@@ -1,9 +1,0 @@
-@use 'mixins' as *;
-
-.sidebar {
-  @include card;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 12px;
-}

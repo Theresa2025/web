@@ -1,12 +1,23 @@
-class EventBuddyModel extends EventTarget {
-    #events = new Map();
-    #participants = new Map();
-    #tags = new Map();
+import EventItem from "./event.js";
 
-    #currentEvent = undefined;   // undefined | null | Event
+console.log("📦 GELADEN: model.js");
+
+class EventBuddyModel extends EventTarget {
+
+    /* =====================
+       STATE
+    ====================== */
+    #events = new Map();        // id → EventItem
+    #participants = new Map(); // id → plain object (später Domain Object)
+    #tags = new Map();         // id → plain object
+
+    #currentEvent = undefined;        // undefined | null | EventItem
+    #currentParticipant = undefined; // undefined | null | Participant
+    #currentTag = undefined;         // undefined | null | Tag
+
     #statusFilter = "all";
     #tagFilter = "all";
-    #participantFilter = "all"; // 🆕 NEU
+    #participantFilter = "all";
 
     constructor() {
         super();
@@ -16,32 +27,41 @@ class EventBuddyModel extends EventTarget {
     /* =====================
        JSON LOADING
     ====================== */
-
     async loadFromJSON() {
         try {
             const res = await fetch("./json/data.json");
             const data = await res.json();
 
-            // Participants
+            // Teilnehmer (noch einfache Objekte)
             for (const p of data.participants ?? []) {
                 this.#participants.set(p.id, p);
             }
 
-            // Tags
+            // Tags (noch einfache Objekte)
             for (const t of data.tags ?? []) {
                 this.#tags.set(t.id, t);
             }
 
-            // Events
+            // Events → Domain Objects
             for (const e of data.events ?? []) {
-                e.status = this.mapStatus(e.status);
-                this.#events.set(e.id, e);
+                const eventItem = new EventItem({
+                    id: e.id,
+                    title: e.title,
+                    description: e.description,
+                    datetime: e.datetime,
+                    location: e.location,
+                    status: this.mapStatus(e.status),
+                    tags: e.tags,
+                    participants: e.participants
+                });
+
+                this.#events.set(eventItem.id, eventItem);
             }
 
-            console.log("[Model] JSON geladen:", {
+            console.log("[Model] Initial State", {
                 events: this.#events,
-                tags: this.#tags,
-                participants: this.#participants
+                participants: this.#participants,
+                tags: this.#tags
             });
 
             this.dispatchEvent(new CustomEvent("model-ready"));
@@ -63,20 +83,17 @@ class EventBuddyModel extends EventTarget {
     get filteredEvents() {
         let events = [...this.#events.values()];
 
-        // Status-Filter
         if (this.#statusFilter !== "all") {
             events = events.filter(e => e.status === this.#statusFilter);
         }
 
-        // Tag-Filter
         if (this.#tagFilter !== "all") {
-            events = events.filter(e => e.tags?.includes(this.#tagFilter));
+            events = events.filter(e => e.tagIds.includes(this.#tagFilter));
         }
 
-        // 🆕 Teilnehmer-Filter
         if (this.#participantFilter !== "all") {
             events = events.filter(e =>
-                (e.participants ?? []).some(
+                e.participants.some(
                     p => p.participantId === this.#participantFilter
                 )
             );
@@ -85,66 +102,60 @@ class EventBuddyModel extends EventTarget {
         return events;
     }
 
-    get currentEvent() {
-        return this.#currentEvent;
+    get events() {
+        return [...this.#events.values()];
     }
 
-    getEventById(id) {
-        return this.#events.get(id);
+    get participants() {
+        return [...this.#participants.values()];
+    }
+    get participantFilter() {
+        return this.#participantFilter;
     }
 
-    /* =====================
-       TAGS
-    ====================== */
 
     get tags() {
         return [...this.#tags.values()];
     }
 
-    getTagTitle(tagId) {
-        return this.#tags.get(tagId)?.title ?? tagId;
+    get currentEvent() {
+        return this.#currentEvent;
     }
 
-    /* =====================
-       PARTICIPANTS
-    ====================== */
-
-    get participants() {
-        return [...this.#participants.values()];
+    get currentParticipant() {
+        return this.#currentParticipant;
     }
 
     getParticipantById(id) {
         return this.#participants.get(id);
     }
 
+
+    // Helper für Views
+    getTagTitle(id) {
+        return this.#tags.get(id)?.title ?? id;
+    }
+
     /* =====================
        EVENT CRUD
     ====================== */
 
-    addEvent(event) {
-        if (!event.id) {
-            event.id = "e" + crypto.randomUUID();
-        }
+    addEvent(eventData) {
+        const event = eventData instanceof EventItem
+            ? eventData
+            : new EventItem({
+                ...eventData,
+                id: eventData.id ?? "e" + crypto.randomUUID()
+            });
 
         this.#events.set(event.id, event);
 
-        console.log("[Model] addEvent:", event);
-
-        this.dispatchEvent(new CustomEvent("addEvent", {
-            detail: { event }
-        }));
-
+        this.dispatchEvent(new CustomEvent("events-changed"));
         this.selectEvent(event.id);
     }
 
     selectEvent(id) {
-        if (id === null) {
-            this.#currentEvent = null;
-            console.log("[Model] selectEvent: CREATE MODE");
-        } else {
-            this.#currentEvent = this.#events.get(id);
-            console.log("[Model] selectEvent:", this.#currentEvent);
-        }
+        this.#currentEvent = (id === null) ? null : this.#events.get(id);
 
         this.dispatchEvent(new CustomEvent("event-changed", {
             detail: { event: this.#currentEvent }
@@ -155,81 +166,130 @@ class EventBuddyModel extends EventTarget {
         const ev = this.#events.get(id);
         if (!ev) return;
 
-        Object.assign(ev, patch);
+        if ("title" in patch) ev.title = patch.title;
+        if ("description" in patch) ev.description = patch.description;
+        if ("datetime" in patch) ev.datetime = patch.datetime;
+        if ("location" in patch) ev.location = patch.location;
+        if ("status" in patch) ev.status = patch.status;
+        if ("tags" in patch) ev.tagIds = patch.tags;
+        if ("participants" in patch) ev.participants = patch.participants;
 
-        console.log("[Model] updateEvent:", ev);
-
-        this.dispatchEvent(new CustomEvent("updateEvent"));
-        this.dispatchEvent(new CustomEvent("event-changed", {
-            detail: { event: ev }
-        }));
+        this.dispatchEvent(new CustomEvent("events-changed"));
+        this.selectEvent(id);
     }
 
     deleteEvent(id) {
         this.#events.delete(id);
         this.#currentEvent = undefined;
 
-        console.log("[Model] deleteEvent:", id);
-
-        this.dispatchEvent(new CustomEvent("deleteEvent"));
+        this.dispatchEvent(new CustomEvent("events-changed"));
         this.dispatchEvent(new CustomEvent("event-changed", {
             detail: { event: null }
         }));
     }
 
     /* =====================
-       FILTER
+       PARTICIPANTS CRUD
     ====================== */
 
-
-    setStatusFilter(status) {
-        this.#statusFilter = status;
-        console.log("[Model] statusFilter gesetzt:", status);
-        this.dispatchEvent(new CustomEvent("filter-changed"));
+    addParticipant(p) {
+        p.id ??= "p" + crypto.randomUUID();
+        this.#participants.set(p.id, p);
+        this.dispatchEvent(new CustomEvent("participants-changed"));
     }
 
-    setTagFilter(tagId) {
-        this.#tagFilter = tagId;
-        console.log("[Model] tagFilter gesetzt:", tagId);
-        this.dispatchEvent(new CustomEvent("filter-changed"));
+    selectParticipant(id) {
+        this.#currentParticipant = (id === null)
+            ? null
+            : this.#participants.get(id);
+
+        this.dispatchEvent(new CustomEvent("participant-changed", {
+            detail: { participant: this.#currentParticipant }
+        }));
     }
 
-    // 🆕 Teilnehmer-Filter setzen
-    setParticipantFilter(participantId) {
-        this.#participantFilter = participantId;
-        console.log("[Model] participantFilter gesetzt:", participantId);
-        this.dispatchEvent(new CustomEvent("filter-changed"));
+    updateParticipant(id, patch) {
+        const p = this.#participants.get(id);
+        if (!p) return;
+
+        Object.assign(p, patch);
+        this.dispatchEvent(new CustomEvent("participants-changed"));
+        this.selectParticipant(id);
     }
+
+    deleteParticipant(id) {
+        const used = [...this.#events.values()].some(
+            e => e.participants.some(p => p.participantId === id)
+        );
+
+        if (used) {
+            alert("Teilnehmer ist noch Events zugeordnet.");
+            return;
+        }
+
+        this.#participants.delete(id);
+        this.dispatchEvent(new CustomEvent("participants-changed"));
+    }
+
+    /* =====================
+       TAGS CRUD
+    ====================== */
+
     addTag(tag) {
-        if (!tag.id) tag.id = "t" + crypto.randomUUID();
+        tag.id ??= "t" + crypto.randomUUID();
         this.#tags.set(tag.id, tag);
-        console.log("[Model] addTag:", tag);
         this.dispatchEvent(new CustomEvent("tags-changed"));
+    }
+
+    selectTag(id) {
+        this.#currentTag = (id === null) ? null : this.#tags.get(id);
+
+        this.dispatchEvent(new CustomEvent("tag-changed", {
+            detail: { tag: this.#currentTag }
+        }));
     }
 
     updateTag(id, patch) {
         const t = this.#tags.get(id);
         if (!t) return;
+
         Object.assign(t, patch);
-        console.log("[Model] updateTag:", t);
         this.dispatchEvent(new CustomEvent("tags-changed"));
+        this.selectTag(id);
     }
 
     deleteTag(id) {
-        // Regel: Tag darf nur gelöscht werden, wenn unbenutzt
-        const used = [...this.#events.values()].some(ev => (ev.tags ?? []).includes(id));
+        const used = [...this.#events.values()].some(
+            e => e.tagIds.includes(id)
+        );
+
         if (used) {
-            this.dispatchEvent(new CustomEvent("error", {
-                detail: { message: "Tag kann nicht gelöscht werden (wird in einem Event verwendet)." }
-            }));
-            return false;
+            alert("Tag wird noch verwendet.");
+            return;
         }
+
         this.#tags.delete(id);
-        console.log("[Model] deleteTag:", id);
         this.dispatchEvent(new CustomEvent("tags-changed"));
-        return true;
     }
 
+    /* =====================
+       FILTER
+    ====================== */
+
+    setStatusFilter(v) {
+        this.#statusFilter = v;
+        this.dispatchEvent(new CustomEvent("filter-changed"));
+    }
+
+    setTagFilter(v) {
+        this.#tagFilter = v;
+        this.dispatchEvent(new CustomEvent("filter-changed"));
+    }
+
+    setParticipantFilter(v) {
+        this.#participantFilter = v;
+        this.dispatchEvent(new CustomEvent("filter-changed"));
+    }
 }
 
 export const model = new EventBuddyModel();
