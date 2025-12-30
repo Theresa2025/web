@@ -2,71 +2,87 @@ import { model } from "./model/model.js";
 
 class Controller {
 
-    constructor() {
-        // absichtlich leer
-    }
-
     init() {
         /* ==========================
-           EVENT AUSWAHL
+           SELECTION EVENTS
         ========================== */
         document.addEventListener("select-event", (e) => {
-            console.log("[Controller] select-event", e.detail.id);
             model.selectEvent(e.detail.id);
         });
 
         document.addEventListener("select-participant", (e) => {
-            console.log("[Controller] select-participant", e.detail.id);
             model.selectParticipant(e.detail.id);
         });
 
+        document.addEventListener("select-tag", (e) => {
+            console.log("✅ CONTROLLER select-tag:", e.detail.id);
+            model.selectTag(e.detail.id);
+        });
+
         /* ==========================
-           VIEW SWITCH
+           NAVIGATION
         ========================== */
         document.querySelectorAll(".nav-btn").forEach(btn => {
             btn.addEventListener("click", () => {
                 this.changeView(btn.dataset.view);
             });
         });
-        document.addEventListener("select-tag", (e) => {
-            model.selectTag(e.detail.id);
-        });
-
 
         // Startansicht
         this.changeView("events");
     }
 
     changeView(view) {
+        const layout = document.querySelector(".layout");
         const sidebar = document.querySelector(".sidebar");
-        const content = document.querySelector(".content");
+        const list = document.querySelector(".list-column");
+        const detail = document.querySelector(".detail-column");
 
+        // reset
+        layout.className = "layout";
+        sidebar.innerHTML = "";
+        list.innerHTML = "";
+        detail.innerHTML = "";
+
+        /* ==========================
+           EVENTS → 3 SPALTEN
+        ========================== */
         if (view === "events") {
+            layout.classList.add("layout--events");
+
             sidebar.innerHTML = `
                 <button id="btn-new-event">+ Neues Event</button>
                 <event-filter></event-filter>
-                <tag-filter></tag-filter>
                 <participant-filter></participant-filter>
-                <event-list></event-list>
+                <tag-filter></tag-filter>
             `;
-            content.innerHTML = `<event-detail></event-detail>`;
+
+            list.innerHTML = `<event-list></event-list>`;
+            detail.innerHTML = `<event-detail></event-detail>`;
 
             document.getElementById("btn-new-event")
                 .onclick = () => model.selectEvent(null);
         }
 
+        /* ==========================
+           PARTICIPANTS → 2 SPALTEN
+        ========================== */
         if (view === "participants") {
+            layout.classList.add("layout--participants");
+
             sidebar.innerHTML = `<participant-list></participant-list>`;
-            content.innerHTML = `<participant-detail></participant-detail>`;
+            detail.innerHTML = `<participant-detail></participant-detail>`;
         }
 
-
-
+        /* ==========================
+           TAGS → 2 SPALTEN
+        ========================== */
         if (view === "tags") {
-            sidebar.innerHTML = `<tag-list></tag-list>`;
-            content.innerHTML = `<tag-detail></tag-detail>`;
-        }
+            layout.classList.add("layout--tags");
 
+            sidebar.innerHTML = `<tag-list></tag-list>`;
+            detail.innerHTML = `<tag-detail></tag-detail>`;
+        }
     }
 }
 

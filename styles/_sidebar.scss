@@ -1,0 +1,29 @@
+@use 'mixins' as *;
+
+.sidebar {
+  @include card;
+  padding: 16px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  /* Sidebar soll immer gut scrollbar sein */
+  max-height: 100%;
+  overflow-y: auto;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+    margin-bottom: 4px;
+  }
+}

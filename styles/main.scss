@@ -1,5 +1,12 @@
-
-
+@import "colors";
+@import "header";
+@import "layout";
+@import "contant";
+@import "mixins";
+@import "sidebar";
+@import "buttons";
+@import "forms";
+@import "detail";
 * {
   box-sizing: border-box;
 }

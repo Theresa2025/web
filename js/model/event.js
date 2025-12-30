@@ -5,9 +5,10 @@ export default class EventItem {
     #datetime;
     #location;
     #status;
-    #tagIds;        // ["t1","t2"]
-    #participants;  // [{participantId:"p1", status:"accepted"}]
+    #tagIds;
+    #participants;
 
+    //Event mit allen Eigenschaften
     constructor({ id, title, description, datetime, location, status, tags, participants }) {
         this.#id = id;
         this.#title = title;
@@ -28,7 +29,7 @@ export default class EventItem {
     get tagIds() { return this.#tagIds; }
     get participants() { return this.#participants; }
 
-    // kleine Setter (für späteres Update)
+   // für das Bearbeiten von Events
     set title(v) { this.#title = v; }
     set description(v) { this.#description = v; }
     set datetime(v) { this.#datetime = v; }

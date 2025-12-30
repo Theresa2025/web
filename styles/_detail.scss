@@ -1,0 +1,53 @@
+@use 'mixins' as *;
+
+.detail-column {
+  @include card;
+  padding: 24px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* =========================
+   TITEL & META
+========================= */
+.detail-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.detail-meta {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+/* =========================
+   CONTENT
+========================= */
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+}
+
+.detail-text {
+  line-height: 1.5;
+}
+
+/* =========================
+   ACTIONS
+========================= */
+.detail-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 8px;
+}

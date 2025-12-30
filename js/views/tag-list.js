@@ -1,5 +1,7 @@
 import { model } from "../model/model.js";
 
+
+
 class TagList extends HTMLElement {
 
     connectedCallback() {
@@ -11,6 +13,7 @@ class TagList extends HTMLElement {
     }
 
     render() {
+        console.log("🔄 TagList render, currentTag:", model.currentTag);
         const currentId = model.currentTag?.id;
 
         this.innerHTML = `
@@ -63,6 +66,7 @@ class TagList extends HTMLElement {
 
         this.querySelectorAll("li[data-id]").forEach(li => {
             li.onclick = () => {
+                console.log("✅ TAG GEKLICKT:", li.dataset.id);
                 this.dispatchEvent(new CustomEvent("select-tag", {
                     bubbles: true,
                     composed: true,

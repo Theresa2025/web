@@ -1,0 +1,31 @@
+.app-header {
+  background-color: var(--bg-elev);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &__logo {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  &__nav {
+    display: flex;
+    gap: 12px;
+
+    button {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 12px;
+      cursor: pointer;
+
+      &:hover {
+        background-color: var(--bg-elev);
+      }
+    }
+  }
+}

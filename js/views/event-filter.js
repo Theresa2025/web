@@ -15,7 +15,7 @@ class EventFilter extends HTMLElement {
 
         const select = this.querySelector("#status");
 
-        // ✅ WICHTIG: Model-Filter initial setzen
+
         select.value = "all";
         model.setStatusFilter("all");
 
