@@ -1,37 +1,53 @@
+
 .layout {
   min-height: calc(100vh - var(--header-height, 64px));
-  padding: 16px;
   display: grid;
+  grid-template-columns: 260px 1fr;
   gap: 16px;
+  padding: 16px;
+  background: #f6f7f8;
 }
 
-/* =========================
-   EVENTS → 3 SPALTEN
-========================= */
-.layout--events {
-  grid-template-columns: 260px 360px 1fr;
+
+.main {
+  display: grid;
+  grid-template-columns: 360px 1fr; // Liste | Detail
+  gap: 24px;
+  width: 100%;
 }
 
-/* =========================
-   PARTICIPANTS / TAGS → 2 SPALTEN
-========================= */
-.layout--participants,
-.layout--tags {
-  grid-template-columns: 320px 1fr;
+.layout--participants .main,
+.layout--tags .main {
+  grid-template-columns: 1fr;
 }
 
-/* mittlere Spalte ausblenden */
 .layout--participants .list-column,
 .layout--tags .list-column {
   display: none;
 }
 
 
-/* =========================
-   RESPONSIVE
-========================= */
+.list-column {
+  width: 100%;
+  max-width: 380px;
+}
+
+.detail-column {
+  width: 100%;
+}
+
+/* Responsive */
+
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
+  }
+
+  .main {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    order: -1;
   }
 }

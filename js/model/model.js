@@ -3,10 +3,11 @@ import Participant from "./participant.js";
 import Tag from "./tag.js";
 
 
-console.log("📦 GELADEN: model.js");
+console.log("model.js wird geladen");
 
 class EventBuddyModel extends EventTarget {
 
+    //Daten liegen im Model
     //Maps-> schneller und über ID
     #events = new Map();
     #participants = new Map();
@@ -33,6 +34,7 @@ class EventBuddyModel extends EventTarget {
             const data = await res.json();
 
             // Teilnehmer
+            // --> ?? wenn etwas leer ist liefer es dann einen leeren Array
             for (const p of data.participants ?? []) {
                 const participant = new Participant(p);
                 this.#participants.set(participant.id, participant);
@@ -62,15 +64,16 @@ class EventBuddyModel extends EventTarget {
                 this.#events.set(eventItem.id, eventItem);
             }
 
-            console.log("[Model] Initial State", {
+            console.log("Model: werden alle Daten geladen: ", {
                 events: this.#events,
                 participants: this.#participants,
                 tags: this.#tags
             });
 
+            //Daten laden fertig: -> für View
             this.dispatchEvent(new CustomEvent("model-ready"));
         } catch (err) {
-            console.error("[Model] JSON load failed", err);
+            console.error("Model: Fehler beim Datenladen", err);
         }
     }
 
@@ -85,16 +88,20 @@ class EventBuddyModel extends EventTarget {
 
     //gibt Events mit aklutellen Filter zurück
     get filteredEvents() {
+       //... verwandelt Map in Array damit Filtern funktioniert
         let events = [...this.#events.values()];
 
+        //Filtern für Status
         if (this.#statusFilter !== "all") {
             events = events.filter(e => e.status === this.#statusFilter);
         }
 
+        //Filtern für Tags
         if (this.#tagFilter !== "all") {
             events = events.filter(e => e.tagIds.includes(this.#tagFilter));
         }
 
+        //Filtern für Teilnehmer
         if (this.#participantFilter !== "all") {
             events = events.filter(e =>
                 e.participants.some(
@@ -146,16 +153,20 @@ class EventBuddyModel extends EventTarget {
 
     /* Event */
     addEvent(event) {
+        //neue ID für neues Event -> Zeit in Sekunden sehr genau
         if (event.id == null) {
             event.id = "e" + Date.now();
         }
 
 
+        //prüfen ob Array leere
         event.tagIds = Array.isArray(event.tagIds) ? event.tagIds : [];
         event.participants = Array.isArray(event.participants) ? event.participants : [];
 
+        //Event in Model speichern
         this.#events.set(event.id, event);
 
+        //Observer Pattern ->im Model nach einer Änderung ein Event disptacht -> View regiert
         this.dispatchEvent(new CustomEvent("events-changed"));
         this.selectEvent(event.id);
     }
@@ -264,7 +275,7 @@ class EventBuddyModel extends EventTarget {
     selectTag(id) {
         this.#currentTag = (id === null) ? null : this.#tags.get(id);
 
-        console.log("✅ MODEL currentTag:", this.#currentTag);
+        console.log("Model-> derzeitiger Tag:", this.#currentTag);
         this.dispatchEvent(new CustomEvent("tag-changed", {
             detail: { tag: this.#currentTag }
         }));

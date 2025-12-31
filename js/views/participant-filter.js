@@ -26,6 +26,7 @@ class ParticipantFilter extends HTMLElement {
             </label>
         `;
 
+        //Filter im Model setzten -> dispatcht-> neu rendern
         this.querySelector("#participant").onchange = (e) => {
             model.setParticipantFilter(e.target.value);
         };

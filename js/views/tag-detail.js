@@ -11,23 +11,20 @@ class TagDetail extends HTMLElement {
             this.render();
         });
 
+
         this.#tag = model.currentTag;
         this.render();
     }
 
     render() {
 
-        /* =====================
-           NOTHING SELECTED
-        ====================== */
+        /*nichts ausgewählt */
         if (this.#tag === undefined) {
             this.innerHTML = "<p>Tag auswählen …</p>";
             return;
         }
 
-        /* =====================
-           CREATE MODE
-        ====================== */
+        /* Neuer Tag */
         if (this.#tag === null) {
             this.innerHTML = `
                 <h3>Neuer Tag</h3>
@@ -54,9 +51,7 @@ class TagDetail extends HTMLElement {
             return;
         }
 
-        /* =====================
-           EDIT MODE
-        ====================== */
+        /* Bearbeiten */
         if (this.#editMode) {
             this.innerHTML = `
                 <h3>Tag bearbeiten</h3>
@@ -88,9 +83,7 @@ class TagDetail extends HTMLElement {
             return;
         }
 
-        /* =====================
-           VIEW MODE
-        ====================== */
+        /* Ansicht */
         this.innerHTML = `
             <h3>${this.#tag.title}</h3>
 

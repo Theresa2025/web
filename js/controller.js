@@ -3,9 +3,8 @@ import { model } from "./model/model.js";
 class Controller {
 
     init() {
-        /* ==========================
-           SELECTION EVENTS
-        ========================== */
+        /* zb: View: es wurde was ausgewählt
+        event list -> dispatchEvent-> controller model.selectEvent-> Model ändert Zustand */
         document.addEventListener("select-event", (e) => {
             model.selectEvent(e.detail.id);
         });
@@ -15,13 +14,11 @@ class Controller {
         });
 
         document.addEventListener("select-tag", (e) => {
-            console.log("✅ CONTROLLER select-tag:", e.detail.id);
+            console.log("CONTROLLER ausgewählter Tag:", e.detail.id);
             model.selectTag(e.detail.id);
         });
 
-        /* ==========================
-           NAVIGATION
-        ========================== */
+        /* Ansicht wechsel */
         document.querySelectorAll(".nav-btn").forEach(btn => {
             btn.addEventListener("click", () => {
                 this.changeView(btn.dataset.view);
@@ -44,9 +41,7 @@ class Controller {
         list.innerHTML = "";
         detail.innerHTML = "";
 
-        /* ==========================
-           EVENTS → 3 SPALTEN
-        ========================== */
+        /* EVENTS → 3 SPALTEN */
         if (view === "events") {
             layout.classList.add("layout--events");
 
@@ -64,9 +59,7 @@ class Controller {
                 .onclick = () => model.selectEvent(null);
         }
 
-        /* ==========================
-           PARTICIPANTS → 2 SPALTEN
-        ========================== */
+        /* Teilnehmer → 2 SPALTEN */
         if (view === "participants") {
             layout.classList.add("layout--participants");
 
@@ -74,9 +67,7 @@ class Controller {
             detail.innerHTML = `<participant-detail></participant-detail>`;
         }
 
-        /* ==========================
-           TAGS → 2 SPALTEN
-        ========================== */
+        /* TAGS → 2 SPALTEN */
         if (view === "tags") {
             layout.classList.add("layout--tags");
 

@@ -13,7 +13,7 @@ class TagList extends HTMLElement {
     }
 
     render() {
-        console.log("🔄 TagList render, currentTag:", model.currentTag);
+        console.log("TagList render, derzeitiger Tag:", model.currentTag);
         const currentId = model.currentTag?.id;
 
         this.innerHTML = `

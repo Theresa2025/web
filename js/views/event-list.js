@@ -9,9 +9,13 @@ class EventList extends HTMLElement {
     connectedCallback() {
         this.render();
 
+        //Daten geladen -> neu rendern
         model.addEventListener("model-ready", () => this.render());
+        //Filter änderung -> aktualisieren
         model.addEventListener("filter-changed", () => this.render());
+        //Events hinnzugefügt/gelöscht -> anteigen
         model.addEventListener("events-changed", () => this.render());
+        //Event ausgewählt -> markieren
         model.addEventListener("event-changed", () => this.render());
     }
 
@@ -77,11 +81,13 @@ class EventList extends HTMLElement {
             li.addEventListener("click", () => {
                 const id = li.dataset.id;
 
+                //Event wurde augewählt
+                // wird nicht im Model geändert -> Controller
                 this.dispatchEvent(
                     new CustomEvent("select-event", {
-                        bubbles: true,
-                        composed: true,
-                        detail: { id }
+                        bubbles: true, //-> bubbelt nach oben im DOM
+                        composed: true, //-> verlässt Shadow DOM
+                        detail: { id } //-> Event- ID
                     })
                 );
             });
@@ -89,4 +95,5 @@ class EventList extends HTMLElement {
     }
 }
 
+//für HTML -> event-list
 customElements.define("event-list", EventList);

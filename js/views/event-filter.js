@@ -15,10 +15,11 @@ class EventFilter extends HTMLElement {
 
         const select = this.querySelector("#status");
 
-
+        //Start -> kein Filter aktiv
         select.value = "all";
         model.setStatusFilter("all");
 
+        //wenn change-> Filter im Model -> dispatcht -> ragiert und redert neu
         select.addEventListener("change", (e) => {
             model.setStatusFilter(e.target.value);
         });

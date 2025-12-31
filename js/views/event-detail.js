@@ -22,7 +22,7 @@ class EventDetail extends HTMLElement {
         model.removeEventListener("event-changed", this.handleEventChanged);
     }
 
-    //Reagiert auf Modle -> aktualisiert und redert neu
+    //Reagiert auf Model -> aktuallisiert und rendert neu
     handleEventChanged(e) {
         this.#event = e.detail.event;
         this.#editMode = false;

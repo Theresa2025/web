@@ -17,17 +17,13 @@ class ParticipantDetail extends HTMLElement {
 
     render() {
 
-        /* =====================
-           NOTHING SELECTED
-        ====================== */
+        /* noch keiner ausgewähtl */
         if (this.#participant === undefined) {
             this.innerHTML = "<p>Teilnehmer auswählen …</p>";
             return;
         }
 
-        /* =====================
-           CREATE MODE
-        ====================== */
+        /* Neuer Teilnehmer */
         if (this.#participant === null) {
             this.innerHTML = `
                 <h3>Neuer Teilnehmer</h3>
@@ -54,15 +50,14 @@ class ParticipantDetail extends HTMLElement {
                     return;
                 }
 
+                //im Model angelegt und auswahlt zurückgesetzt
                 model.addParticipant({ name, email });
                 model.selectParticipant(undefined);
             };
             return;
         }
 
-        /* =====================
-           EDIT MODE
-        ====================== */
+        /* Teilnehmer bearbeiten */
         if (this.#editMode) {
             this.innerHTML = `
                 <h3>Teilnehmer bearbeiten</h3>
@@ -101,9 +96,7 @@ class ParticipantDetail extends HTMLElement {
             return;
         }
 
-        /* =====================
-           VIEW MODE
-        ====================== */
+        /* Anzeigen */
         this.innerHTML = `
             <h3>${this.#participant.name}</h3>
             <p>${this.#participant.email}</p>

@@ -4,14 +4,13 @@
   @include card;
   padding: 24px;
 
+
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-/* =========================
-   TITEL & META
-========================= */
+
 .detail-title {
   font-size: 1.6rem;
   font-weight: 600;
@@ -21,15 +20,14 @@
 .detail-meta {
   font-size: 0.9rem;
   opacity: 0.7;
+  color: #6b7280;
 }
 
-/* =========================
-   CONTENT
-========================= */
 .detail-section {
   display: flex;
   flex-direction: column;
   gap: 6px;
+
 }
 
 .detail-label {
@@ -43,9 +41,7 @@
   line-height: 1.5;
 }
 
-/* =========================
-   ACTIONS
-========================= */
+
 .detail-actions {
   margin-top: auto;
   display: flex;
