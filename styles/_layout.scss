@@ -1,21 +1,26 @@
+@use 'mixins' as *;
 
 .layout {
   min-height: calc(100vh - var(--header-height, 64px));
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
   padding: 16px;
-  background: #f6f7f8;
+  background: var(--bg);
 }
 
+.sidebar,
+.list-column,
+.detail-column {
+  @include card;
+  padding: 16px;
+}
 
 .main {
   display: grid;
-  grid-template-columns: 2fr 3fr;
+  grid-template-columns: 1fr;
   gap: 24px;
-  width: 100%;
 }
-
 
 .layout--participants .main,
 .layout--tags .main {
@@ -27,27 +32,13 @@
   display: none;
 }
 
-
-.list-column {
-  width: 100%;
-}
-
-.detail-column {
-  width: 100%;
-}
-
-/* Responsive */
-
-@media (max-width: 900px) {
+//Responible
+@media (min-width: 900px) {
   .layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(240px, 300px) 1fr;
   }
 
   .main {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebar {
-    order: -1;
+    grid-template-columns: 2fr 3fr;
   }
 }

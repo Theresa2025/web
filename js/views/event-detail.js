@@ -64,7 +64,7 @@ class EventDetail extends HTMLElement {
         this.shadowRoot.innerHTML = `
             <style>${this.styles}</style>
 
-            <div class="card">
+            <div class="detail">
                 <h2 class="title">${this.#event.title}</h2>
 
                 <div class="meta">
@@ -126,7 +126,7 @@ class EventDetail extends HTMLElement {
         this.shadowRoot.innerHTML = `
             <style>${this.styles}</style>
 
-            <div class="card">
+            <div class="detail">
                 <h2>Event bearbeiten</h2>
 
                 <label>
@@ -224,7 +224,7 @@ class EventDetail extends HTMLElement {
         this.shadowRoot.innerHTML = `
             <style>${this.styles}</style>
 
-            <div class="card">
+            <div class="detail">
                 <h2>Neues Event</h2>
 
                 <label>
@@ -314,98 +314,102 @@ class EventDetail extends HTMLElement {
     * (abekapselt), deswegen hier  */
     get styles() {
         return `
-            :host {
-                display: block;
-                height: 100%;
-            }
+      :host {
+        display: block;
+        height: 100%;
+      }
 
-            .card {
-                background-color: var(--bg-elev);
-                border: 1px solid var(--border);
-                border-radius: var(--radius);
-                padding: 24px;
-                display: flex;
-                flex-direction: column;
-                gap: 16px;
-                height: 100%;
-            }
+      .detail {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        padding: 8px;
+      }
 
-            .title {
-                margin: 0;
-                font-size: 1.6rem;
-            }
+      .title {
+        margin: 0;
+        font-size: 1.6rem;
+      }
 
-            .meta {
-                font-size: 0.9rem;
-                opacity: 0.7;
-            }
+      .meta {
+        margin-top: 4px;
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+        opacity: 0.7;
+      }
 
-            .section {
-                display: flex;
-                flex-direction: column;
-                gap: 6px;
-            }
+      .section {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 20px;
+      }
 
-            .label {
-                font-size: 0.75rem;
-                text-transform: uppercase;
-                letter-spacing: 0.05em;
-                opacity: 0.6;
-            }
+      .label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        opacity: 0.6;
+      }
 
-            ul {
-                margin: 0;
-                padding-left: 18px;
-            }
+      p {
+        margin: 0;
+        line-height: 1.5;
+      }
 
-            .actions {
-                margin-top: auto;
-                display: flex;
-                gap: 8px;
-            }
+      ul {
+        margin: 0;
+        padding-left: 18px;
+      }
 
-            button {
-                padding: 10px 14px;
-                border-radius: var(--radius);
-                border: 1px solid var(--border);
-                background-color: var(--bg-elev);
-                cursor: pointer;
-            }
+      .actions {
+        margin-top: auto;
+        display: flex;
+        gap: 8px;
+        padding-top: 16px;
+      }
 
-            button.primary {
-                background-color: var(--primary);
-                color: white;
-                border: none;
-            }
+      button {
+        padding: 10px 14px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background-color: var(--bg-elev);
+        cursor: pointer;
+      }
 
-            label {
-                display: flex;
-                flex-direction: column;
-                gap: 4px;
-            }
+      button.primary {
+        background-color: var(--primary);
+        color: white;
+        border: none;
+      }
 
-            label.check {
-                flex-direction: row;
-                align-items: center;
-                gap: 8px;
-            }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
 
-            input,
-            textarea,
-            select {
-                padding: 8px 10px;
-                border-radius: var(--radius);
-                border: 1px solid var(--border);
-                background-color: var(--bg-elev);
-            }
+      label.check {
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
+      }
 
-            .empty {
-                opacity: 0.6;
-                padding: 16px;
-            }
-        `;
+      input,
+      textarea,
+      select {
+        padding: 8px 10px;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        background-color: var(--bg-elev);
+      }
+
+      .empty {
+        opacity: 0.6;
+        padding: 16px;
+      }
+    `;
     }
 }
-
 //Registierung der Web Component -> kann im HTML verwendet werden
 customElements.define("event-detail", EventDetail);
