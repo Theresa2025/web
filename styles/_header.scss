@@ -1,16 +1,11 @@
 .app-header {
-  background-color: var(--bg-elev);
+  background-color: var(--primary-soft);
   border-bottom: 1px solid var(--border);
   padding: 12px 24px;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
-
-  &__logo {
-    font-size: 1.5rem;
-    font-weight: 600;
-  }
 
   &__nav {
     display: flex;
@@ -25,6 +20,12 @@
 
       &:hover {
         background-color: var(--bg-elev);
+      }
+
+      &.active {
+        background-color: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
       }
     }
   }

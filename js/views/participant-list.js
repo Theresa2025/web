@@ -14,38 +14,13 @@ class ParticipantList extends HTMLElement {
         const currentId = model.currentParticipant?.id;
 
         this.innerHTML = `
-            <style>
-                button {
-                    margin-bottom: 0.5rem;
-                }
+            <div class="list-actions">
+                <button id="btn-new-participant">
+                    + Neuer Teilnehmer
+                </button>
+            </div>
 
-                ul {
-                    list-style: none;
-                    padding: 0;
-                    margin: 0;
-                }
-
-                li {
-                    padding: 0.6em 0.8em;
-                    cursor: pointer;
-                    border-radius: 6px;
-                }
-
-                li:hover {
-                    background: rgba(0,0,0,0.05);
-                }
-
-                li.active {
-                    background: rgba(16, 185, 129, 0.18);
-                    font-weight: 600;
-                }
-            </style>
-
-            <button id="btn-new-participant">
-                + Neuer Teilnehmer
-            </button>
-
-            <ul>
+            <ul class="list">
                 ${model.participants.map(p => `
                     <li
                         data-id="${p.id}"

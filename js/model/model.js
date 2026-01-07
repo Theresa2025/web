@@ -86,7 +86,7 @@ class EventBuddyModel extends EventTarget {
 
     /* getters*/
 
-    //gibt Events mit aklutellen Filter zurück
+    //gibt Events mit aktuellen Filter zurück
     get filteredEvents() {
        //... verwandelt Map in Array damit Filtern funktioniert
         let events = [...this.#events.values()];
@@ -153,27 +153,38 @@ class EventBuddyModel extends EventTarget {
 
     /* Event */
     addEvent(event) {
-        //neue ID für neues Event -> Zeit in Sekunden sehr genau
+        // falls neues Event → ID erzeugen
         if (event.id == null) {
             event.id = "e" + Date.now();
         }
 
+        // sicherstellen, dass Arrays existieren
+        if (!Array.isArray(event.tagIds)) {
+            event.tagIds = [];
+        }
 
-        //prüfen ob Array leere
-        event.tagIds = Array.isArray(event.tagIds) ? event.tagIds : [];
-        event.participants = Array.isArray(event.participants) ? event.participants : [];
+        if (!Array.isArray(event.participants)) {
+            event.participants = [];
+        }
 
-        //Event in Model speichern
+        // im Model speichern
         this.#events.set(event.id, event);
 
-        //Observer Pattern ->im Model nach einer Änderung ein Event disptacht -> View regiert
+        // Views informieren
         this.dispatchEvent(new CustomEvent("events-changed"));
+
+        // neues Event automatisch auswählen
         this.selectEvent(event.id);
     }
 
 
+
     selectEvent(id) {
-        this.#currentEvent = (id === null) ? null : this.#events.get(id);
+        if (id === null) {
+            this.#currentEvent = null;
+        } else {
+            this.#currentEvent = this.#events.get(id);
+        }
 
         this.dispatchEvent(new CustomEvent("event-changed", {
             detail: { event: this.#currentEvent }
@@ -238,10 +249,14 @@ class EventBuddyModel extends EventTarget {
         const p = this.#participants.get(id);
         if (!p) return;
 
-        Object.assign(p, patch);
+        p.name = patch.name ?? p.name;
+        p.email = patch.email ?? p.email;
+        p.avatar = patch.avatar ?? p.avatar;
+
         this.dispatchEvent(new CustomEvent("participants-changed"));
         this.selectParticipant(id);
     }
+
 
     deleteParticipant(id) {
         const used = [...this.#events.values()].some(
@@ -275,7 +290,6 @@ class EventBuddyModel extends EventTarget {
     selectTag(id) {
         this.#currentTag = (id === null) ? null : this.#tags.get(id);
 
-        console.log("Model-> derzeitiger Tag:", this.#currentTag);
         this.dispatchEvent(new CustomEvent("tag-changed", {
             detail: { tag: this.#currentTag }
         }));
@@ -285,10 +299,13 @@ class EventBuddyModel extends EventTarget {
         const t = this.#tags.get(id);
         if (!t) return;
 
-        Object.assign(t, patch);
+        t.title = patch.title ?? t.title;
+        t.color = patch.color ?? t.color;
+
         this.dispatchEvent(new CustomEvent("tags-changed"));
         this.selectTag(id);
     }
+
 
     deleteTag(id) {
         const used = [...this.#events.values()].some(

@@ -21,12 +21,26 @@ class Controller {
         /* Ansicht wechsel */
         document.querySelectorAll(".nav-btn").forEach(btn => {
             btn.addEventListener("click", () => {
+                this.setActiveNav(btn);
                 this.changeView(btn.dataset.view);
             });
         });
 
         // Startansicht
+        const startBtn = document.querySelector('.nav-btn[data-view="events"]');
+        if (startBtn) {
+            this.setActiveNav(startBtn);
+        }
         this.changeView("events");
+    }
+
+
+    setActiveNav(activeBtn) {
+        document.querySelectorAll(".nav-btn").forEach(btn =>
+            btn.classList.remove("active")
+        );
+
+        activeBtn.classList.add("active");
     }
 
     changeView(view) {

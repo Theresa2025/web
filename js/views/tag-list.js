@@ -1,7 +1,5 @@
 import { model } from "../model/model.js";
 
-
-
 class TagList extends HTMLElement {
 
     connectedCallback() {
@@ -13,48 +11,20 @@ class TagList extends HTMLElement {
     }
 
     render() {
-        console.log("TagList render, derzeitiger Tag:", model.currentTag);
         const currentId = model.currentTag?.id;
 
         this.innerHTML = `
-            <style>
-                button {
-                    margin-bottom: 0.5rem;
-                }
+            <div class="list-actions">
+                <button id="btn-new-tag">+ Neuer Tag</button>
+            </div>
 
-                ul {
-                    list-style: none;
-                    padding: 0;
-                    margin: 0;
-                }
-
-                li {
-                    padding: 0.6em 0.8em;
-                    cursor: pointer;
-                    border-radius: 6px;
-                }
-
-                li:hover {
-                    background: rgba(0,0,0,0.05);
-                }
-
-                li.active {
-                    background: rgba(16, 185, 129, 0.18);
-                    font-weight: 600;
-                }
-            </style>
-
-            <button id="btn-new-tag">
-                + Neuer Tag
-            </button>
-
-            <ul>
-                ${model.tags.map(t => `
+            <ul class="list">
+                ${model.tags.map(tag => `
                     <li
-                        data-id="${t.id}"
-                        class="${t.id === currentId ? "active" : ""}"
+                        data-id="${tag.id}"
+                        class="${tag.id === currentId ? "active" : ""}"
                     >
-                        ${t.title}
+                        ${tag.title}
                     </li>
                 `).join("")}
             </ul>
@@ -66,7 +36,6 @@ class TagList extends HTMLElement {
 
         this.querySelectorAll("li[data-id]").forEach(li => {
             li.onclick = () => {
-                console.log("✅ TAG GEKLICKT:", li.dataset.id);
                 this.dispatchEvent(new CustomEvent("select-tag", {
                     bubbles: true,
                     composed: true,
