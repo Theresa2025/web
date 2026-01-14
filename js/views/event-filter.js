@@ -19,7 +19,7 @@ class EventFilter extends HTMLElement {
         select.value = "all";
         model.setStatusFilter("all");
 
-        //wenn change-> Filter im Model -> dispatcht -> ragiert und redert neu
+        //wenn change-> Filter im Model -> dispatcht -> reagiert und redert neu
         select.addEventListener("change", (e) => {
             model.setStatusFilter(e.target.value);
         });

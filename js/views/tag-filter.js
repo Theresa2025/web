@@ -3,30 +3,30 @@ import { model } from "../model/model.js";
 class TagFilter extends HTMLElement {
 
     connectedCallback() {
+        // Initiales Rendern
         this.render();
 
+        // ➕ WICHTIG: auf Model-Events reagieren
         model.addEventListener("model-ready", () => this.render());
+        model.addEventListener("tags-changed", () => this.render());
     }
 
     render() {
-        const tags = model.tags ?? [];
-        const current = model.tagFilter ?? "all";
-
         this.innerHTML = `
             <label>
-                Tag:
-                <select id="tag">
-                    <option value="all">Alle</option>
-                    ${tags.map(t => `
-                        <option value="${t.id}" ${t.id === current ? "selected" : ""}>
-                            ${t.title}
+                Tags
+                <select id="tag-filter">
+                    <option value="all">Alle Tags</option>
+                    ${model.tags.map(tag => `
+                        <option value="${tag.id}">
+                            ${tag.title}
                         </option>
                     `).join("")}
                 </select>
             </label>
         `;
 
-        this.querySelector("#tag").onchange = (e) => {
+        this.querySelector("#tag-filter").onchange = e => {
             model.setTagFilter(e.target.value);
         };
     }

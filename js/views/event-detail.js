@@ -1,7 +1,6 @@
 import { model } from "../model/model.js";
 
-
-//EventDetail -> Web Component -> rendert Detailansicht und reagiert auf Model Events
+// EventDetail -> Web Component -> rendert Detailansicht und reagiert auf Model Events
 class EventDetail extends HTMLElement {
     #event;
     #editMode = false;
@@ -14,6 +13,10 @@ class EventDetail extends HTMLElement {
 
     connectedCallback() {
         model.addEventListener("event-changed", this.handleEventChanged);
+
+        // ➕ wenn Tags geändert werden → neu rendern
+        model.addEventListener("tags-changed", () => this.render());
+
         this.#event = model.currentEvent;
         this.render();
     }
@@ -22,7 +25,7 @@ class EventDetail extends HTMLElement {
         model.removeEventListener("event-changed", this.handleEventChanged);
     }
 
-    //Reagiert auf Model -> aktuallisiert und rendert neu
+    // Reagiert auf Model -> aktualisiert Auswahl & rendert neu
     handleEventChanged(e) {
         this.#event = e.detail.event;
         this.#editMode = false;
@@ -36,13 +39,16 @@ class EventDetail extends HTMLElement {
         return status;
     }
 
-    //entscheidet welche Ansicht gezeigt wird
+    // entscheidet welche Ansicht gezeigt wird
     render() {
+        // Neues Event anlegen
         if (this.#event === null) {
-            this.renderCreateForm();
+            this.#editMode = false;
+            this.renderEventForm();
             return;
         }
 
+        // Kein Event ausgewählt
         if (!this.#event) {
             this.shadowRoot.innerHTML = `
                 <style>${this.styles}</style>
@@ -51,15 +57,17 @@ class EventDetail extends HTMLElement {
             return;
         }
 
+        // Event bearbeiten
         if (this.#editMode) {
-            this.renderEditForm();
+            this.renderEventForm(this.#event);
             return;
         }
 
+        // Detailansicht
         this.renderViewMode();
     }
 
-    /* Detailansicht */
+    /* ================= DETAILANSICHT ================= */
     renderViewMode() {
         this.shadowRoot.innerHTML = `
             <style>${this.styles}</style>
@@ -80,7 +88,7 @@ class EventDetail extends HTMLElement {
                     <div class="label">Tags</div>
                     <p>
                         ${
-            this.#event.tagIds.length
+            this.#event.tagIds?.length
                 ? this.#event.tagIds.map(id => model.getTagTitle(id)).join(", ")
                 : "keine"
         }
@@ -121,63 +129,87 @@ class EventDetail extends HTMLElement {
         };
     }
 
-    /* Bearbeitung */
-    renderEditForm() {
+    /* ================= FORMULAR (CREATE + EDIT) ================= */
+    renderEventForm(event = {}) {
         this.shadowRoot.innerHTML = `
             <style>${this.styles}</style>
 
             <div class="detail">
-                <h2>Event bearbeiten</h2>
+                <h2>${this.#editMode ? "Event bearbeiten" : "Neues Event"}</h2>
 
                 <label>
                     Titel
-                    <input id="title" value="${this.#event.title}">
+                    <input id="title" value="${event.title ?? ""}" required>
+                    <span class="error" hidden>Bitte gib einen Event-Titel ein</span>
+                </label>
+
+                <label>
+                    Datum & Uhrzeit
+                    <input id="datetime" type="datetime-local" value="${event.datetime ?? ""}">
                 </label>
 
                 <label>
                     Ort
-                    <input id="location" value="${this.#event.location}">
+                    <input id="location" value="${event.location ?? ""}">
                 </label>
 
                 <label>
                     Beschreibung
-                    <textarea id="description">${this.#event.description}</textarea>
+                    <textarea id="description">${event.description ?? ""}</textarea>
                 </label>
 
                 <label>
                     Status
                     <select id="status">
-                        <option value="geplant" ${this.#event.status === "geplant" ? "selected" : ""}>geplant</option>
-                        <option value="abgeschlossen" ${this.#event.status === "abgeschlossen" ? "selected" : ""}>abgeschlossen</option>
+                        <option value="geplant" ${event.status === "geplant" ? "selected" : ""}>geplant</option>
+                        <option value="abgeschlossen" ${event.status === "abgeschlossen" ? "selected" : ""}>abgeschlossen</option>
                     </select>
                 </label>
 
                 <div class="section">
                     <div class="label">Tags</div>
+
                     ${model.tags.map(tag => `
                         <label class="check">
                             <input
                                 type="checkbox"
                                 name="tag"
                                 value="${tag.id}"
-                                ${this.#event.tagIds.includes(tag.id) ? "checked" : ""}
+                                ${event.tagIds?.includes(tag.id) ? "checked" : ""}
                             >
                             <span>${tag.title}</span>
                         </label>
                     `).join("")}
+
+                    <!-- Inline Tag-Erstellung -->
+                    <div class="tag-create">
+                        <input id="new-tag-input" placeholder="Neuen Tag anlegen">
+                        <button id="add-tag-btn" type="button">Hinzufügen</button>
+                    </div>
                 </div>
 
                 <div class="section">
                     <div class="label">Teilnehmer</div>
-                    ${this.#event.participants.map(p => {
-            const person = model.getParticipantById(p.participantId);
+
+                    ${model.participants.map(p => {
+            const existing = event.participants?.find(
+                ep => ep.participantId === p.id
+            );
+
             return `
-                            <label>
-                                ${person?.name}
-                                <select data-id="${p.participantId}">
-                                    <option value="accepted" ${p.status === "accepted" ? "selected" : ""}>zugesagt</option>
-                                    <option value="undecided" ${p.status === "undecided" ? "selected" : ""}>offen</option>
-                                    <option value="declined" ${p.status === "declined" ? "selected" : ""}>abgesagt</option>
+                            <label class="check">
+                                <input
+                                    type="checkbox"
+                                    name="participant"
+                                    value="${p.id}"
+                                    ${existing ? "checked" : ""}
+                                >
+                                <span>${p.name}</span>
+
+                                <select data-id="${p.id}">
+                                    <option value="accepted" ${existing?.status === "accepted" ? "selected" : ""}>zugesagt</option>
+                                    <option value="undecided" ${existing?.status === "undecided" || !existing ? "selected" : ""}>offen</option>
+                                    <option value="declined" ${existing?.status === "declined" ? "selected" : ""}>abgesagt</option>
                                 </select>
                             </label>
                         `;
@@ -185,231 +217,190 @@ class EventDetail extends HTMLElement {
                 </div>
 
                 <div class="actions">
-                    <button id="save" class="primary">Speichern</button>
+                    <button id="save" class="primary">
+                        ${this.#editMode ? "Speichern" : "Erstellen"}
+                    </button>
                     <button id="cancel">Abbrechen</button>
                 </div>
             </div>
         `;
 
+        // ➕ neuen Tag anlegen
+        this.shadowRoot.querySelector("#add-tag-btn")
+            ?.addEventListener("click", () => this.handleAddTag());
+
+        // Speichern (Create + Edit)
         this.shadowRoot.querySelector("#save").onclick = () => {
-            const tagIds = [
-                ...this.shadowRoot.querySelectorAll('input[name="tag"]:checked')
-            ].map(cb => cb.value);
+            const titleInput = this.shadowRoot.querySelector("#title");
+            const error = this.shadowRoot.querySelector(".error");
 
-            const participants = [
-                ...this.shadowRoot.querySelectorAll("select[data-id]")
-            ].map(sel => ({
-                participantId: sel.dataset.id,
-                status: sel.value
-            }));
-
-            model.updateEvent(this.#event.id, {
-                title: this.shadowRoot.querySelector("#title").value,
-                location: this.shadowRoot.querySelector("#location").value,
-                description: this.shadowRoot.querySelector("#description").value,
-                status: this.shadowRoot.querySelector("#status").value,
-                tagIds,
-                participants
-            });
-        };
-
-        this.shadowRoot.querySelector("#cancel").onclick = () => {
-            this.#editMode = false;
-            this.render();
-        };
-    }
-
-    /* Neu Erstellen */
-    renderCreateForm() {
-        this.shadowRoot.innerHTML = `
-            <style>${this.styles}</style>
-
-            <div class="detail">
-                <h2>Neues Event</h2>
-
-                <label>
-                    Titel
-                    <input id="title">
-                </label>
-
-                <label>
-                    Datum & Uhrzeit
-                    <input id="datetime" type="datetime-local">
-                </label>
-
-                <label>
-                    Ort
-                    <input id="location">
-                </label>
-
-                <label>
-                    Beschreibung
-                    <textarea id="description"></textarea>
-                </label>
-
-                <label>
-                    Status
-                    <select id="status">
-                        <option value="geplant">geplant</option>
-                        <option value="abgeschlossen">abgeschlossen</option>
-                    </select>
-                </label>
-
-                <div class="section">
-                    <div class="label">Tags</div>
-                    ${model.tags.map(tag => `
-                        <label class="check">
-                            <input type="checkbox" name="tag" value="${tag.id}">
-                            <span>${tag.title}</span>
-                        </label>
-                    `).join("")}
-                </div>
-
-                <div class="section">
-                    <div class="label">Teilnehmer</div>
-                    ${model.participants.map(p => `
-                        <label class="check">
-                            <input type="checkbox" name="participant" value="${p.id}">
-                            <span>${p.name}</span>
-                        </label>
-                    `).join("")}
-                </div>
-
-                <div class="actions">
-                    <button id="create" class="primary">Erstellen</button>
-                    <button id="cancel">Abbrechen</button>
-                </div>
-            </div>
-        `;
-
-        this.shadowRoot.querySelector("#create").onclick = () => {
-            const tagIds = [
-                ...this.shadowRoot.querySelectorAll('input[name="tag"]:checked')
-            ].map(cb => cb.value);
+            if (titleInput.value.trim() === "") {
+                error.hidden = false;
+                titleInput.focus();
+                return;
+            }
+            error.hidden = true;
 
             const participants = [
                 ...this.shadowRoot.querySelectorAll('input[name="participant"]:checked')
-            ].map(cb => ({
-                participantId: cb.value,
-                status: "undecided"
-            }));
+            ].map(cb => {
+                const select = this.shadowRoot.querySelector(
+                    `select[data-id="${cb.value}"]`
+                );
+                return {
+                    participantId: cb.value,
+                    status: select.value
+                };
+            });
 
-            model.addEvent({
-                title: this.shadowRoot.querySelector("#title").value,
+            // ✅ GANZ WICHTIG: Tags sammeln
+            const tagIds = [
+                ...this.shadowRoot.querySelectorAll('input[name="tag"]:checked')
+            ].map(cb => cb.value);
+
+            const data = {
+                title: titleInput.value.trim(),
                 datetime: this.shadowRoot.querySelector("#datetime").value,
                 location: this.shadowRoot.querySelector("#location").value,
                 description: this.shadowRoot.querySelector("#description").value,
                 status: this.shadowRoot.querySelector("#status").value,
-                tagIds,
-                participants
-            });
+                participants,
+                tagIds
+            };
+
+            if (this.#editMode) {
+                model.updateEvent(this.#event.id, data);
+            } else {
+                model.addEvent(data);
+            }
         };
 
         this.shadowRoot.querySelector("#cancel").onclick = () => {
+            this.#editMode = false;
             model.selectEvent(undefined);
         };
     }
 
-    /* Formatieren, durch Shadow Dom wird das normal formatieren in scss verhintert
-    * (abekapselt), deswegen hier  */
+    // ➕ Neuen Tag direkt im Formular anlegen
+    handleAddTag() {
+        const input = this.shadowRoot.querySelector("#new-tag-input");
+        const title = input.value.trim();
+        if (!title) return;
+
+        const tag = model.addTag(title);
+        if (tag && this.#event?.tagIds && !this.#event.tagIds.includes(tag.id)) {
+            this.#event.tagIds.push(tag.id);
+        }
+
+        input.value = "";
+        this.render();
+    }
+
+    /* ================= STYLES ================= */
     get styles() {
         return `
-      :host {
-        display: block;
-        height: 100%;
-      }
+            :host {
+                display: block;
+                height: 100%;
+            }
 
-      .detail {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        padding: 8px;
-      }
+            .detail {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                padding: 8px;
+            }
 
-      .title {
-        margin: 0;
-        font-size: 1.6rem;
-      }
+            .title {
+                margin: 0;
+                font-size: 1.6rem;
+            }
 
-      .meta {
-        margin-top: 4px;
-        margin-bottom: 20px;
-        font-size: 0.9rem;
-        opacity: 0.7;
-      }
+            .meta {
+                margin-bottom: 20px;
+                font-size: 0.9rem;
+                opacity: 0.7;
+            }
 
-      .section {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        margin-bottom: 20px;
-      }
+            .section {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                margin-bottom: 20px;
+            }
 
-      .label {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        opacity: 0.6;
-      }
+            .label {
+                font-size: 0.75rem;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                opacity: 0.6;
+            }
 
-      p {
-        margin: 0;
-        line-height: 1.5;
-      }
+            .tag-create {
+                display: flex;
+                gap: 6px;
+                margin-top: 6px;
+            }
 
-      ul {
-        margin: 0;
-        padding-left: 18px;
-      }
+            ul {
+                margin: 0;
+                padding-left: 18px;
+            }
 
-      .actions {
-        margin-top: auto;
-        display: flex;
-        gap: 8px;
-        padding-top: 16px;
-      }
+            .actions {
+                margin-top: auto;
+                display: flex;
+                gap: 8px;
+                padding-top: 16px;
+            }
 
-      button {
-        padding: 10px 14px;
-        border-radius: var(--radius);
-        border: 1px solid var(--border);
-        background-color: var(--bg-elev);
-        cursor: pointer;
-      }
+            button {
+                padding: 10px 14px;
+                border-radius: var(--radius);
+                border: 1px solid var(--border);
+                background-color: var(--bg-elev);
+                cursor: pointer;
+            }
 
-      button.primary {
-        background-color: var(--primary);
-        color: white;
-        border: none;
-      }
+            button.primary {
+                background-color: var(--primary);
+                color: white;
+                border: none;
+            }
 
-      label {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
+            label {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
 
-      label.check {
-        flex-direction: row;
-        align-items: center;
-        gap: 8px;
-      }
+            label.check {
+                flex-direction: row;
+                align-items: center;
+                gap: 8px;
+            }
 
-      input,
-      textarea,
-      select {
-        padding: 8px 10px;
-        border-radius: var(--radius);
-        border: 1px solid var(--border);
-        background-color: var(--bg-elev);
-      }
+            input,
+            textarea,
+            select {
+                padding: 8px 10px;
+                border-radius: var(--radius);
+                border: 1px solid var(--border);
+                background-color: var(--bg-elev);
+            }
 
-      .empty {
-        opacity: 0.6;
-        padding: 16px;
-      }
-    `;
+            .error {
+                color: #c62828;
+                font-size: 0.75rem;
+            }
+
+            .empty {
+                opacity: 0.6;
+                padding: 16px;
+            }
+        `;
     }
 }
-//Registierung der Web Component -> kann im HTML verwendet werden
+
+// Registrierung der Web Component -> kann im HTML verwendet werden
 customElements.define("event-detail", EventDetail);

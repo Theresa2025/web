@@ -8,6 +8,7 @@ import "./views/participant-list.js";
 import "./views/participant-detail.js";
 import "./views/participant-filter.js";
 
+
 // TAGS
 import "./views/tag-list.js";
 import "./views/tag-detail.js";
