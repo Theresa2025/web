@@ -1,6 +1,7 @@
 import { model } from "../model/model.js";
 
-// EventDetail -> Web Component -> rendert Detailansicht und reagiert auf Model Events
+// EventDetail -> Web Component
+// Zeigt Detailansicht eines Events und erlaubt Bearbeiten / Erstellen
 class EventDetail extends HTMLElement {
     #event;
     #editMode = false;
@@ -14,7 +15,7 @@ class EventDetail extends HTMLElement {
     connectedCallback() {
         model.addEventListener("event-changed", this.handleEventChanged);
 
-        // ➕ wenn Tags geändert werden → neu rendern
+        // Wenn Tags geändert werden  im Modal → neu rendern
         model.addEventListener("tags-changed", () => this.render());
 
         this.#event = model.currentEvent;
@@ -25,7 +26,6 @@ class EventDetail extends HTMLElement {
         model.removeEventListener("event-changed", this.handleEventChanged);
     }
 
-    // Reagiert auf Model -> aktualisiert Auswahl & rendert neu
     handleEventChanged(e) {
         this.#event = e.detail.event;
         this.#editMode = false;
@@ -39,7 +39,6 @@ class EventDetail extends HTMLElement {
         return status;
     }
 
-    // entscheidet welche Ansicht gezeigt wird
     render() {
         // Neues Event anlegen
         if (this.#event === null) {
@@ -67,7 +66,8 @@ class EventDetail extends HTMLElement {
         this.renderViewMode();
     }
 
-    /* ================= DETAILANSICHT ================= */
+    /* Detailansicht*/
+
     renderViewMode() {
         this.shadowRoot.innerHTML = `
             <style>${this.styles}</style>
@@ -76,7 +76,7 @@ class EventDetail extends HTMLElement {
                 <h2 class="title">${this.#event.title}</h2>
 
                 <div class="meta">
-                    ${this.#event.location} • ${this.#event.status}
+                    ${this.#event.location || "—"} • ${this.#event.status}
                 </div>
 
                 <div class="section">
@@ -89,7 +89,9 @@ class EventDetail extends HTMLElement {
                     <p>
                         ${
             this.#event.tagIds?.length
-                ? this.#event.tagIds.map(id => model.getTagTitle(id)).join(", ")
+                ? this.#event.tagIds
+                    .map(id => model.getTagTitle(id))
+                    .join(", ")
                 : "keine"
         }
                     </p>
@@ -102,7 +104,7 @@ class EventDetail extends HTMLElement {
             const person = model.getParticipantById(p.participantId);
             return `
                                 <li>
-                                    ${person?.name}
+                                    ${person?.name ?? "?"}
                                     (${this.mapParticipationStatus(p.status)})
                                 </li>
                             `;
@@ -129,7 +131,8 @@ class EventDetail extends HTMLElement {
         };
     }
 
-    /* ================= FORMULAR (CREATE + EDIT) ================= */
+    /* Event bearbeiten/erstellen */
+
     renderEventForm(event = {}) {
         this.shadowRoot.innerHTML = `
             <style>${this.styles}</style>
@@ -139,7 +142,7 @@ class EventDetail extends HTMLElement {
 
                 <label>
                     Titel
-                    <input id="title" value="${event.title ?? ""}" required>
+                    <input id="title" value="${event.title ?? ""}">
                     <span class="error" hidden>Bitte gib einen Event-Titel ein</span>
                 </label>
 
@@ -166,6 +169,7 @@ class EventDetail extends HTMLElement {
                     </select>
                 </label>
 
+                <!-- TAGS -->
                 <div class="section">
                     <div class="label">Tags</div>
 
@@ -181,13 +185,12 @@ class EventDetail extends HTMLElement {
                         </label>
                     `).join("")}
 
-                    <!-- Inline Tag-Erstellung -->
-                    <div class="tag-create">
-                        <input id="new-tag-input" placeholder="Neuen Tag anlegen">
-                        <button id="add-tag-btn" type="button">Hinzufügen</button>
-                    </div>
+                    <button id="manage-tags" type="button" class="primary">
+                        Tags verwalten
+                    </button>
                 </div>
 
+                <!-- TEILNEHMER -->
                 <div class="section">
                     <div class="label">Teilnehmer</div>
 
@@ -208,7 +211,7 @@ class EventDetail extends HTMLElement {
 
                                 <select data-id="${p.id}">
                                     <option value="accepted" ${existing?.status === "accepted" ? "selected" : ""}>zugesagt</option>
-                                    <option value="undecided" ${existing?.status === "undecided" || !existing ? "selected" : ""}>offen</option>
+                                    <option value="undecided" ${!existing || existing?.status === "undecided" ? "selected" : ""}>offen</option>
                                     <option value="declined" ${existing?.status === "declined" ? "selected" : ""}>abgesagt</option>
                                 </select>
                             </label>
@@ -225,11 +228,15 @@ class EventDetail extends HTMLElement {
             </div>
         `;
 
-        // ➕ neuen Tag anlegen
-        this.shadowRoot.querySelector("#add-tag-btn")
-            ?.addEventListener("click", () => this.handleAddTag());
+        // Tags verwalten → Event nach außen werfen
+        this.shadowRoot.querySelector("#manage-tags")
+            ?.addEventListener("click", () => {
+                this.dispatchEvent(new CustomEvent("open-tag-manager", {
+                    bubbles: true
+                }));
+            });
 
-        // Speichern (Create + Edit)
+        // Speichern eingabe und speichert daten im Model
         this.shadowRoot.querySelector("#save").onclick = () => {
             const titleInput = this.shadowRoot.querySelector("#title");
             const error = this.shadowRoot.querySelector(".error");
@@ -253,7 +260,6 @@ class EventDetail extends HTMLElement {
                 };
             });
 
-            // ✅ GANZ WICHTIG: Tags sammeln
             const tagIds = [
                 ...this.shadowRoot.querySelectorAll('input[name="tag"]:checked')
             ].map(cb => cb.value);
@@ -281,22 +287,8 @@ class EventDetail extends HTMLElement {
         };
     }
 
-    // ➕ Neuen Tag direkt im Formular anlegen
-    handleAddTag() {
-        const input = this.shadowRoot.querySelector("#new-tag-input");
-        const title = input.value.trim();
-        if (!title) return;
+    /* Formatierung */
 
-        const tag = model.addTag(title);
-        if (tag && this.#event?.tagIds && !this.#event.tagIds.includes(tag.id)) {
-            this.#event.tagIds.push(tag.id);
-        }
-
-        input.value = "";
-        this.render();
-    }
-
-    /* ================= STYLES ================= */
     get styles() {
         return `
             :host {
@@ -334,12 +326,6 @@ class EventDetail extends HTMLElement {
                 text-transform: uppercase;
                 letter-spacing: 0.05em;
                 opacity: 0.6;
-            }
-
-            .tag-create {
-                display: flex;
-                gap: 6px;
-                margin-top: 6px;
             }
 
             ul {
@@ -402,5 +388,4 @@ class EventDetail extends HTMLElement {
     }
 }
 
-// Registrierung der Web Component -> kann im HTML verwendet werden
 customElements.define("event-detail", EventDetail);

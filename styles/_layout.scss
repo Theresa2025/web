@@ -21,16 +21,20 @@
   grid-template-columns: 1fr;
   gap: 24px;
 }
+.empty {
+  opacity: 0.6;
+  padding: 16px;
+}
 
-.layout--participants .main,
-.layout--tags .main {
+
+.layout--participants .main {
   grid-template-columns: 1fr;
 }
 
-.layout--participants .list-column,
-.layout--tags .list-column {
+.layout--participants .list-column {
   display: none;
 }
+
 
 //Responible
 @media (min-width: 900px) {

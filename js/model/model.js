@@ -4,21 +4,19 @@ import Tag from "./tag.js";
 
 console.log("model.js wird geladen");
 
-//EventTarget = Subject, Views= Observer, dispatchEvent() = Benachrichtigung
+// Model = Subject (EventTarget)
 class EventBuddyModel extends EventTarget {
 
-    //Daten liegen im Model
-    //Maps-> schneller und über ID
+    // Map-> über ID
     #events = new Map();
     #participants = new Map();
     #tags = new Map();
 
-    //Aktuelle Auswahl
+    // aktuelle Auswahl
     #currentEvent = undefined;
     #currentParticipant = undefined;
-    #currentTag = undefined;
 
-    //Filtereinstellung
+    // Filter
     #statusFilter = "all";
     #tagFilter = "all";
     #participantFilter = "all";
@@ -28,20 +26,19 @@ class EventBuddyModel extends EventTarget {
         this.loadFromJSON();
     }
 
-    /* Daten Laden -> data.json */
+    /*Daten laden */
     async loadFromJSON() {
         try {
             const res = await fetch("./json/data.json");
             const data = await res.json();
 
             // Teilnehmer
-            // --> ?? wenn etwas leer ist liefert es dann einen leeren Array
             for (const p of data.participants ?? []) {
                 const participant = new Participant(p);
                 this.#participants.set(participant.id, participant);
             }
 
-            // Tags
+            // Tags (global, aber UI-gebunden an Events)
             for (const t of data.tags ?? []) {
                 const tag = new Tag(t);
                 this.#tags.set(tag.id, tag);
@@ -63,55 +60,19 @@ class EventBuddyModel extends EventTarget {
                 this.#events.set(eventItem.id, eventItem);
             }
 
-            console.log("Model: werden alle Daten geladen: ", {
-                events: this.#events,
-                participants: this.#participants,
-                tags: this.#tags
-            });
-
-            //Daten laden fertig: -> für View-> rendern
             this.dispatchEvent(new CustomEvent("model-ready"));
         } catch (err) {
-            console.error("Model: Fehler beim Datenladen", err);
+            console.error("Fehler beim Laden der Daten", err);
         }
     }
 
-    //übersetzung von json
     mapStatus(status) {
         if (status === "planned") return "geplant";
         if (status === "done") return "abgeschlossen";
         return status;
     }
 
-    // getters -> views dürfen lesen
-
-    //gibt Events mit aktuellen Filter zurück
-    get filteredEvents() {
-        //... verwandelt Map in Array damit Filtern funktioniert
-        let events = [...this.#events.values()];
-
-        //Filtern für Status
-        if (this.#statusFilter !== "all") {
-            events = events.filter(e => e.status === this.#statusFilter);
-        }
-
-        //Filtern für Tags
-        if (this.#tagFilter !== "all") {
-            events = events.filter(e => e.tagIds.includes(this.#tagFilter));
-        }
-
-        //Filtern für Teilnehmer
-        if (this.#participantFilter !== "all") {
-            events = events.filter(e =>
-                e.participants.some(
-                    p => p.participantId === this.#participantFilter
-                )
-            );
-        }
-
-        return events;
-    }
-
+    /* Getter */
     get events() {
         return [...this.#events.values()];
     }
@@ -120,16 +81,8 @@ class EventBuddyModel extends EventTarget {
         return [...this.#participants.values()];
     }
 
-    get participantFilter() {
-        return this.#participantFilter;
-    }
-
     get tags() {
         return [...this.#tags.values()];
-    }
-
-    get currentTag() {
-        return this.#currentTag;
     }
 
     get currentEvent() {
@@ -140,55 +93,67 @@ class EventBuddyModel extends EventTarget {
         return this.#currentParticipant;
     }
 
-    //für die View -> liefert Teilnehmer über ID
     getParticipantById(id) {
         return this.#participants.get(id);
     }
 
-    //für View -> Titel eines Tags (ID)
     getTagTitle(id) {
         return this.#tags.get(id)?.title ?? id;
     }
+    get tagFilter() {
+        return this.#tagFilter;
+    }
 
-    // Event
+
+    // Gefilterte Events (Listenansicht)
+    get filteredEvents() {
+        let events = [...this.#events.values()];
+
+        if (this.#statusFilter !== "all") {
+            events = events.filter(e => e.status === this.#statusFilter);
+        }
+
+        if (this.#tagFilter !== "all") {
+            events = events.filter(e => e.tagIds.includes(this.#tagFilter));
+        }
+
+        if (this.#participantFilter !== "all") {
+            events = events.filter(e =>
+                e.participants.some(p => p.participantId === this.#participantFilter)
+            );
+        }
+
+        return events;
+    }
+
+    /* Events */
     addEvent(event) {
-
-        if (!event.title || event.title.trim() === "") {
+        if (!event.title?.trim()) {
             throw new Error("Event-Titel ist verpflichtend");
         }
 
-        // falls neues Event → ID erzeugen
-        if (event.id == null) {
+        if (!event.id) {
             event.id = "e" + Date.now();
         }
 
-        // sicherstellen, dass Arrays existieren
-        if (!Array.isArray(event.tagIds)) {
-            event.tagIds = [];
-        }
+        event.tagIds ??= [];
+        event.participants ??= [];
 
-        if (!Array.isArray(event.participants)) {
-            event.participants = [];
-        }
-
-        // im Model speichern
         this.#events.set(event.id, event);
 
-        // Views informieren
         this.dispatchEvent(new CustomEvent("events-changed"));
-
-        // neues Event automatisch auswählen
         this.selectEvent(event.id);
     }
 
     selectEvent(id) {
-        if (id === null) {
-            this.#currentEvent = null;
+        if (id === undefined) {
+            this.#currentEvent = undefined;   // nichts ausgewählt
+        } else if (id === null) {
+            this.#currentEvent = null;        // neues Event anlegen
         } else {
             this.#currentEvent = this.#events.get(id);
         }
 
-        //Detailansicht aktualisieren
         this.dispatchEvent(new CustomEvent("event-changed", {
             detail: { event: this.#currentEvent }
         }));
@@ -198,18 +163,16 @@ class EventBuddyModel extends EventTarget {
         const ev = this.#events.get(id);
         if (!ev) return;
 
-        ev.title = patch.title ?? ev.title;
-        ev.location = patch.location ?? ev.location;
-        ev.description = patch.description ?? ev.description;
-        ev.status = patch.status ?? ev.status;
+        //Bestehende Daten aktualisieren-> ?? ignoriert null/undefined
+        Object.assign(ev, {
+            title: patch.title ?? ev.title,
+            description: patch.description ?? ev.description,
+            location: patch.location ?? ev.location,
+            status: patch.status ?? ev.status,
+        });
 
-        if (Array.isArray(patch.tagIds)) {
-            ev.tagIds = patch.tagIds;
-        }
-
-        if (Array.isArray(patch.participants)) {
-            ev.participants = patch.participants;
-        }
+        if (Array.isArray(patch.tagIds)) ev.tagIds = patch.tagIds;
+        if (Array.isArray(patch.participants)) ev.participants = patch.participants;
 
         this.dispatchEvent(new CustomEvent("events-changed"));
         this.selectEvent(id);
@@ -217,46 +180,42 @@ class EventBuddyModel extends EventTarget {
 
     deleteEvent(id) {
         this.#events.delete(id);
-        this.#currentEvent = undefined;
+        this.#currentEvent = null;
 
         this.dispatchEvent(new CustomEvent("events-changed"));
-        this.dispatchEvent(new CustomEvent("event-changed", {
-            detail: { event: null }
-        }));
+        this.dispatchEvent(new CustomEvent("event-changed", { detail: { event: null } }));
     }
 
-    // Teilnehmer
-    addParticipant(p) {
-        if (p.id == null) {
-            p.id = "p" + Date.now();
-        }
-
-        const participant = new Participant(p);
-        this.#participants.set(participant.id, participant);
+    /* Teilnehmer */
+    addParticipant(data) {
+        data.id ??= "p" + Date.now();
+        const p = new Participant(data);
+        this.#participants.set(p.id, p);
 
         this.dispatchEvent(new CustomEvent("participants-changed"));
     }
 
     selectParticipant(id) {
-        this.#currentParticipant = (id === null)
-            ? null
-            : this.#participants.get(id);
+        if (id === undefined) {
+            this.#currentParticipant = undefined; // nichts ausgewählt
+        } else if (id === null) {
+            this.#currentParticipant = null;      // neuer Teilnehmer
+        } else {
+            this.#currentParticipant = this.#participants.get(id);
+        }
 
         this.dispatchEvent(new CustomEvent("participant-changed", {
             detail: { participant: this.#currentParticipant }
         }));
     }
 
+
     updateParticipant(id, patch) {
         const p = this.#participants.get(id);
         if (!p) return;
 
-        p.name = patch.name ?? p.name;
-        p.email = patch.email ?? p.email;
-        p.avatar = patch.avatar ?? p.avatar;
-
+        Object.assign(p, patch);
         this.dispatchEvent(new CustomEvent("participants-changed"));
-        this.selectParticipant(id);
     }
 
     deleteParticipant(id) {
@@ -273,80 +232,37 @@ class EventBuddyModel extends EventTarget {
         this.dispatchEvent(new CustomEvent("participants-changed"));
     }
 
-    // Tags
-
-    // ➕ erweitert: String ODER Objekt möglich + Rückgabewert
-    addTag(tagData) {
-
-        const title = typeof tagData === "string"
-            ? tagData.trim()
-            : tagData.title?.trim();
-
+    /* Tags */
+    addTag(title) {
+        title = title?.trim();
         if (!title) return null;
 
-        // prüfen ob Tag bereits existiert
         for (const t of this.#tags.values()) {
             if (t.title.toLowerCase() === title.toLowerCase()) {
                 return t;
             }
         }
 
-        const tag = new Tag({
-            id: "t" + Date.now(),
-            title,
-            color: tagData.color ?? "#cccccc"
-        });
-
+        const tag = new Tag({ id: "t" + Date.now(), title });
         this.#tags.set(tag.id, tag);
 
         this.dispatchEvent(new CustomEvent("tags-changed"));
-
         return tag;
     }
 
-    // ➕ NEU: Tag direkt einem Event zuordnen
-    addTagToEvent(eventId, tagId) {
-        const ev = this.#events.get(eventId);
-        if (!ev) return;
-
-        if (!Array.isArray(ev.tagIds)) {
-            ev.tagIds = [];
-        }
-
-        if (!ev.tagIds.includes(tagId)) {
-            ev.tagIds.push(tagId);
-        }
-
-        this.dispatchEvent(new CustomEvent("events-changed"));
-        this.selectEvent(eventId);
-    }
-
-    selectTag(id) {
-        this.#currentTag = (id === null) ? null : this.#tags.get(id);
-
-        this.dispatchEvent(new CustomEvent("tag-changed", {
-            detail: { tag: this.#currentTag }
-        }));
-    }
-
-    updateTag(id, patch) {
+    updateTag(id, title) {
         const t = this.#tags.get(id);
         if (!t) return;
 
-        t.title = patch.title ?? t.title;
-        t.color = patch.color ?? t.color;
-
+        t.title = title.trim();
         this.dispatchEvent(new CustomEvent("tags-changed"));
-        this.selectTag(id);
     }
 
     deleteTag(id) {
-        const used = [...this.#events.values()].some(
-            e => e.tagIds.includes(id)
-        );
+        const used = [...this.#events.values()].some(e => e.tagIds.includes(id));
 
         if (used) {
-            alert("Tag wird noch verwendet.");
+            alert("Tag kann nicht gelöscht werden – er wird noch verwendet.");
             return;
         }
 
@@ -354,9 +270,7 @@ class EventBuddyModel extends EventTarget {
         this.dispatchEvent(new CustomEvent("tags-changed"));
     }
 
-    // Filter
-
-    //Listenansicht neu rendern in der View
+    /* Filter */
     setStatusFilter(v) {
         this.#statusFilter = v;
         this.dispatchEvent(new CustomEvent("filter-changed"));

@@ -19,10 +19,13 @@ class ParticipantDetail extends HTMLElement {
 
         /* noch keiner ausgewähtl */
         if (this.#participant === undefined) {
-            this.innerHTML = "<p>Teilnehmer auswählen …</p>";
+            this.innerHTML = `
+        <div class="empty">
+            Bitte Teilnehmer auswählen …
+        </div>
+    `;
             return;
         }
-
         /* Neuer Teilnehmer */
         if (this.#participant === null) {
             this.innerHTML = `
@@ -38,7 +41,7 @@ class ParticipantDetail extends HTMLElement {
                     <input id="email" type="email">
                 </label>
 
-                <button id="save">Anlegen</button>
+                <button id="save">Speichern</button>
             `;
 
             this.querySelector("#save").onclick = () => {

@@ -13,34 +13,25 @@
 
 <body class="app">
 
-<!-- Header -->
 <header class="app-header">
     <h1 class="app-header__logo">EventBuddy</h1>
 
     <nav class="app-header__nav">
         <button class="nav-btn" data-view="events">Events</button>
         <button class="nav-btn" data-view="participants">Teilnehmer</button>
-        <button class="nav-btn" data-view="tags">Tags</button>
     </nav>
 </header>
 
-<!-- Layout -->
 <div class="layout">
-
     <aside class="sidebar"></aside>
 
-
     <main class="main">
-        <section class="list-column">
-            <!-- event-list / participant-list / tag-list -->
-        </section>
-        <section class="detail-column">
-            <!-- event-detail / participant-detail / tag-detail -->
-        </section>
-
+        <section class="list-column"></section>
+        <section class="detail-column"></section>
     </main>
-
 </div>
+
+<tag-manager-modal></tag-manager-modal>
 
 <script type="module" src="./js/main.js"></script>
 

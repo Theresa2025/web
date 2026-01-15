@@ -1,21 +1,20 @@
-// EVENTS
+// Events
 import "./views/event-list.js";
 import "./views/event-detail.js";
 import "./views/event-filter.js";
 
-// TEILNEHMER
+// Teilnehmer
 import "./views/participant-list.js";
 import "./views/participant-detail.js";
 import "./views/participant-filter.js";
 
 
-// TAGS
-import "./views/tag-list.js";
-import "./views/tag-detail.js";
+// Tag
+import "./views/tag-manager-modal.js";
 import "./views/tag-filter.js";
 
-// CONTROLLER
+// Controller
 import { controller } from "./controller.js";
 
-window.controller = controller; // Debug
+window.controller = controller;
 controller.init();
