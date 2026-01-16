@@ -5,6 +5,7 @@ import Tag from "./tag.js";
 console.log("model.js wird geladen");
 
 // Model = Subject (EventTarget)
+//Views und Controller können sich als Listener registrieren
 class EventBuddyModel extends EventTarget {
 
     // Map-> über ID
@@ -12,7 +13,7 @@ class EventBuddyModel extends EventTarget {
     #participants = new Map();
     #tags = new Map();
 
-    // aktuelle Auswahl
+    // aktuelle Auswahl -> undefined (nichts ausgwählt)
     #currentEvent = undefined;
     #currentParticipant = undefined;
 
@@ -60,6 +61,7 @@ class EventBuddyModel extends EventTarget {
                 this.#events.set(eventItem.id, eventItem);
             }
 
+            //Daten fertig geladen-> Views dürfen rendern
             this.dispatchEvent(new CustomEvent("model-ready"));
         } catch (err) {
             console.error("Fehler beim Laden der Daten", err);
@@ -72,7 +74,7 @@ class EventBuddyModel extends EventTarget {
         return status;
     }
 
-    /* Getter */
+    /* Getter -> zugfriff von außen*/
     get events() {
         return [...this.#events.values()];
     }
@@ -126,7 +128,8 @@ class EventBuddyModel extends EventTarget {
         return events;
     }
 
-    /* Events */
+    /* Events
+    * ID generieren und Observer informieren*/
     addEvent(event) {
         if (!event.title?.trim()) {
             throw new Error("Event-Titel ist verpflichtend");
@@ -144,6 +147,8 @@ class EventBuddyModel extends EventTarget {
         this.dispatchEvent(new CustomEvent("events-changed"));
         this.selectEvent(event.id);
     }
+
+    /*Event auswählen, undefined -> nichts, null-> neues */
 
     selectEvent(id) {
         if (id === undefined) {
@@ -164,6 +169,9 @@ class EventBuddyModel extends EventTarget {
         if (!ev) return;
 
         //Bestehende Daten aktualisieren-> ?? ignoriert null/undefined
+        /*Beim Patch-Prinzip übergebe ich nur die geänderten Werte.
+        Alles andere bleibt unverändert.
+        Das ist effizienter und verhindert, dass Daten verloren gehen*/
         Object.assign(ev, {
             title: patch.title ?? ev.title,
             description: patch.description ?? ev.description,
@@ -180,10 +188,10 @@ class EventBuddyModel extends EventTarget {
 
     deleteEvent(id) {
         this.#events.delete(id);
-        this.#currentEvent = null;
+        this.#currentEvent = undefined;
 
         this.dispatchEvent(new CustomEvent("events-changed"));
-        this.dispatchEvent(new CustomEvent("event-changed", { detail: { event: null } }));
+        this.dispatchEvent(new CustomEvent("event-changed", { detail: { event: undefined } }));
     }
 
     /* Teilnehmer */
@@ -286,5 +294,6 @@ class EventBuddyModel extends EventTarget {
         this.dispatchEvent(new CustomEvent("filter-changed"));
     }
 }
+
 
 export const model = new EventBuddyModel();

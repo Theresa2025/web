@@ -12,11 +12,17 @@ class EventDetail extends HTMLElement {
         this.handleEventChanged = this.handleEventChanged.bind(this);
     }
 
+    //wird aufgerufen wenn Elemente im DOM hinzugefügt werden
+    //View registriert sich hier als Observer beim Model
+    //und reagiert auf event-changed
     connectedCallback() {
         model.addEventListener("event-changed", this.handleEventChanged);
 
         // Wenn Tags geändert werden  im Modal → neu rendern
-        model.addEventListener("tags-changed", () => this.render());
+        model.addEventListener("tags-changed", () => {
+            this.updateTagCheckboxes();
+        });
+
 
         this.#event = model.currentEvent;
         this.render();
@@ -26,6 +32,7 @@ class EventDetail extends HTMLElement {
         model.removeEventListener("event-changed", this.handleEventChanged);
     }
 
+    //Wenn sich aktuelles Event im Model ändert -> neu rendern
     handleEventChanged(e) {
         this.#event = e.detail.event;
         this.#editMode = false;
@@ -170,25 +177,28 @@ class EventDetail extends HTMLElement {
                 </label>
 
                 <!-- TAGS -->
-                <div class="section">
-                    <div class="label">Tags</div>
+            <div class="section">
+    <div class="label">Tags</div>
 
-                    ${model.tags.map(tag => `
-                        <label class="check">
-                            <input
-                                type="checkbox"
-                                name="tag"
-                                value="${tag.id}"
-                                ${event.tagIds?.includes(tag.id) ? "checked" : ""}
-                            >
-                            <span>${tag.title}</span>
-                        </label>
-                    `).join("")}
+    <div class="tags">
+        ${model.tags.map(tag => `
+            <label class="check">
+                <input
+                    type="checkbox"
+                    name="tag"
+                    value="${tag.id}"
+                    ${event.tagIds?.includes(tag.id) ? "checked" : ""}
+                >
+                <span>${tag.title}</span>
+            </label>
+        `).join("")}
+    </div>
 
-                    <button id="manage-tags" type="button" class="primary">
-                        Tags verwalten
-                    </button>
-                </div>
+    <button id="manage-tags" type="button" class="primary">
+        Tags verwalten
+    </button>
+</div>
+
 
                 <!-- TEILNEHMER -->
                 <div class="section">
@@ -287,6 +297,31 @@ class EventDetail extends HTMLElement {
         };
     }
 
+    updateTagCheckboxes() {
+        const container = this.shadowRoot.querySelector(".tags");
+        if (!container) return;
+
+        const checked = [
+            ...this.shadowRoot.querySelectorAll('input[name="tag"]:checked')
+        ].map(cb => cb.value);
+
+        container.innerHTML = `
+        ${model.tags.map(tag => `
+            <label class="check">
+                <input
+                    type="checkbox"
+                    name="tag"
+                    value="${tag.id}"
+                    ${checked.includes(tag.id) ? "checked" : ""}
+                >
+                <span>${tag.title}</span>
+            </label>
+        `).join("")}
+    `;
+    }
+
+
+
     /* Formatierung */
 
     get styles() {
@@ -320,6 +355,8 @@ class EventDetail extends HTMLElement {
                 gap: 6px;
                 margin-bottom: 20px;
             }
+            
+
 
             .label {
                 font-size: 0.75rem;
