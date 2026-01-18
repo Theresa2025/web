@@ -21,6 +21,7 @@ class EventFilter extends HTMLElement {
 
         //wenn change-> Filter im Model -> dispatcht -> reagiert und redert neu
         select.addEventListener("change", (e) => {
+            console.log("change → neuer Status:", e.target.value);
             model.setStatusFilter(e.target.value);
         });
     }

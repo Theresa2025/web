@@ -144,7 +144,9 @@ class EventBuddyModel extends EventTarget {
 
         this.#events.set(event.id, event);
 
+        console.log("[MODEL] dispatch events-changed");
         this.dispatchEvent(new CustomEvent("events-changed"));
+
         this.selectEvent(event.id);
     }
 
@@ -242,6 +244,7 @@ class EventBuddyModel extends EventTarget {
 
     /* Tags */
     addTag(title) {
+        console.log("[MODEL] addTag()", title);
         title = title?.trim();
         if (!title) return null;
 

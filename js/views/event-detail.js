@@ -16,10 +16,13 @@ class EventDetail extends HTMLElement {
     //View registriert sich hier als Observer beim Model
     //und reagiert auf event-changed
     connectedCallback() {
+        console.log("connectedCallback → registriere Observer");
         model.addEventListener("event-changed", this.handleEventChanged);
 
         // Wenn Tags geändert werden  im Modal → neu rendern
         model.addEventListener("tags-changed", () => {
+            console.log("tags-changed → updateTagCheckboxes()");
+
             this.updateTagCheckboxes();
         });
 
@@ -29,11 +32,13 @@ class EventDetail extends HTMLElement {
     }
 
     disconnectedCallback() {
+        console.log("disconnectedCallback → entferne Observer");
         model.removeEventListener("event-changed", this.handleEventChanged);
     }
 
     //Wenn sich aktuelles Event im Model ändert -> neu rendern
     handleEventChanged(e) {
+        console.log("event-changed empfangen:", e.detail.event);
         this.#event = e.detail.event;
         this.#editMode = false;
         this.render();

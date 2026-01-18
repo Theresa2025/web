@@ -3,12 +3,15 @@ import { model } from "./model/model.js";
 class Controller {
 
     init() {
+        console.log("[CONTROLLER] init()");
         // Auswahl aus Listen
         document.addEventListener("select-event", (e) => {
+            console.log("[CONTROLLER] select-event empfangen:", e.detail.id);
             model.selectEvent(e.detail.id);
         });
 
         document.addEventListener("select-participant", (e) => {
+            console.log("[CONTROLLER] select-participant empfangen:", e.detail.id);
             model.selectParticipant(e.detail.id);
         });
 

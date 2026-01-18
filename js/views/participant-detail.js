@@ -6,6 +6,7 @@ class ParticipantDetail extends HTMLElement {
 
     connectedCallback() {
         model.addEventListener("participant-changed", (e) => {
+            console.log("participant-changed empfangen:", e.detail.participant);
             this.#participant = e.detail.participant;
             this.#editMode = false;
             this.render();
